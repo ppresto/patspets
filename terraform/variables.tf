@@ -1,6 +1,6 @@
 variable "aws_region" {
   description = "AWS region"
-  default     = "us-east-1"
+  default     = "us-west-2"
 }
 
 variable "ami_id" {
@@ -20,15 +20,15 @@ variable "instance_type" {
 
 variable "name" {
   description = "name to pass to Name tag"
-  default     = "jray-ptfe-jenkins"
+  default     = "ppresto-ptfe-jenkins"
 }
 
 variable "owner" {
-  description = "jray@hashicorp.com"
+  description = "ppresto@hashicorp.com"
 }
 
 variable "key_name" {
-  description = "jray"
+  description = "ppresto-key"
 }
 
 variable "ttl" {
