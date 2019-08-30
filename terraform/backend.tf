@@ -1,10 +1,10 @@
 terraform {
     backend "remote" {
-        hostname = "myjenkins.hashidemo.io"
+        hostname = "app.terraform.io"
         organization = "Patrick"
 
         workspaces {
-            name = "patspets"
+            name = "patspets_master"
         }
     }
 }
