@@ -8,6 +8,7 @@ pipeline {
             TFE_API_URL = "${TFE_URL}/api/v2"
             TFE_API_TOKEN = credentials("tfe_api_token")
       }
+      
             stages {
                   stage('Preparation') {
                         steps {
