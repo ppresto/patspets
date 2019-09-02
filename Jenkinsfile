@@ -1,3 +1,21 @@
+import groovy.json.JsonOutput
+//slack env vars
+env.slack_url = 'https://hooks.slack.com/services/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'
+env.notification_channel = 'ppresto-alerts'
+
+//jenkins env vars
+env.jenkins_node_label = 'master'
+
+def notifySlack(text, channel, attachments) {
+    def payload = JsonOutput.toJson([text: text,
+        channel: channel,
+        username: "Jenkins",
+        attachments: attachments
+    ])
+    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+}
+
+
 pipeline {
       agent any
       environment {
@@ -12,16 +30,18 @@ pipeline {
             stages {
                   stage('Preparation') {
                         steps {
-                              git "${GIT_REPO}"
-                              sh "ls"
-                              sh '''
-                                    #curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip
-                                    terraform version
-                                    pwd
-                                    ls 
-                                    echo "${TFE_API_TOKEN}"
-                                    echo env.TFE_API_TOKEN
+                            git branch: 'master',
+                                credentialsId: 'github-myjenkins-token',
+                                url: "${GIT_REPO}"
+
+                            dir("${env.WORKSPACE}/tfe"){
+                                sh '''
+                                curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip
+                                pwd
+                                ./terraform version
                               '''
+                            }
+
                         }
                   }
                   stage('TFE Workstation list ') {
@@ -38,16 +58,22 @@ pipeline {
                   }
                   stage('Terraform Init') {
                         steps {
-                        sh "echo ${TFE_API_TOKEN}"
-                        sh "sed -i 's/TFE_API_TOKEN/${TFE_API_TOKEN}/' main.tf"
-                        sh "cat main.tf"
-                        sh "./terraform init"
+                            dir("${env.WORKSPACE}/tfe"){
+                                sh '''
+                                ./terraform init -backend-config="token=${TFE_API_TOKEN}" 
+                                '''
+                            notifySlack("init completed! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
+                            }
                         }
                   }
-                  stage('One') {
-                  steps {
-                        echo 'Hello from HashiCorp'
-                  }
+                  stage('Terraform Plan/Apply') {
+                      steps {
+                            dir("${env.WORKSPACE}/tfe"){
+                                sh '''
+                                ./terraform apply
+                                '''
+                            }
+                      }
                   }
                   stage('Three') {
                   when {
@@ -56,7 +82,7 @@ pipeline {
                         }
                   }
                   steps {
-                        echo "Hello"
+                        echo "Not Master Branch"
                   }
                   }
                   stage('Four') {
