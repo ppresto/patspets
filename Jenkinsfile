@@ -15,7 +15,6 @@ def notifySlack(text, channel, attachments) {
     sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
 }
 
-
 pipeline {
       agent any
       environment {
