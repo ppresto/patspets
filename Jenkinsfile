@@ -19,8 +19,8 @@ pipeline {
                                     terraform version
                                     pwd
                                     ls 
-                                    echo $TFE_API_TOKEN
-                                    
+                                    echo "${TFE_API_TOKEN}"
+                                    echo env.TFE_API_TOKEN
                               '''
                         }
                   }
