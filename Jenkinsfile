@@ -8,17 +8,19 @@ pipeline {
             TFE_API_URL = "${TFE_URL}/api/v2"
             TFE_API_TOKEN = credentials("tfe_api_token")
       }
-      
+
             stages {
                   stage('Preparation') {
                         steps {
                               git "${GIT_REPO}"
                               sh "ls"
                               sh '''
-                                    curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip
-                                    ./terraform version
+                                    #curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip
+                                    terraform version
                                     pwd
-                                    ls  
+                                    ls 
+                                    echo $TFE_API_TOKEN
+                                    
                               '''
                         }
                   }
