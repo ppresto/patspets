@@ -67,7 +67,7 @@ pipeline {
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
                               --header "Content-Type: application/vnd.api+json" \
                               ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
-                              | jq -r ".data.id"'
+                              | jq -r ".data.id"')
                         }
                   }
             }
