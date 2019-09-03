@@ -16,7 +16,7 @@ def notifySlack(text, channel, attachments) {
     sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
 }
 
-def WORKSPACE_ID = "unknown"
+//def WORKSPACE_ID = "unknown"
 
 pipeline {
       agent any
@@ -63,7 +63,7 @@ pipeline {
             stage('Get Workspace ID') {
                   steps {
                         script {
-                              WORKSPACE_ID = sh(returnStdout: true, script: 'curl \
+                              env.WORKSPACE_ID = sh(returnStdout: true, script: 'curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
                               --header "Content-Type: application/vnd.api+json" \
                               ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
@@ -73,8 +73,7 @@ pipeline {
             }
             stage('Create New Config Version') {
                   steps {
-                        echo "WORKSPACE_ID: ${WORKSPACE_ID}"
-                        withEnv(["WORKSPACE_ID"]){                             
+                        echo "WORKSPACE_ID: ${WORKSPACE_ID}"                           
                         sh '''
                               echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
                               echo "WORKSPACE_ID: ${WORKSPACE_ID}"
@@ -87,7 +86,6 @@ pipeline {
                               | jq -r '.data.attributes."upload-url"')
                         '''
                         notifySlack("New Configuration Version Created! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
-                        }
                   }
             }
             stage('Upload Content') {
