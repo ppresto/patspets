@@ -3,7 +3,7 @@ import groovy.json.JsonOutput
 env.slack_url = 'https://hooks.slack.com/services/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'
 env.notification_channel = 'ppresto-alerts'
 
-//jenkins env vars
+//jenkins env vars .. not used ..
 env.jenkins_node_label = 'master'
 
 def notifySlack(text, channel, attachments) {
