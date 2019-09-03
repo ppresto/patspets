@@ -15,16 +15,6 @@ void setBuildStatus(String message, String state) {
   ]);
 }
 
-// Github - Merge PR to Master and Push
-def mergeThenPush(repo, toBranch) {
-  withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
-    sh "git checkout ${toBranch}"
-    sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
-    sh "git merge origin/${env.BRANCH_NAME} --no-edit"
-    sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
-  }
-}
-
 def notifySlack(text, channel, attachments) {
     def payload = JsonOutput.toJson([text: text,
         channel: channel,
@@ -78,21 +68,15 @@ CONFIG
                                     ./terraform apply
                               '''
                         }
-                        
-                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): terraform apply\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console\nTerraform Runs: ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
-                  }
-            }
-            stage('Merge PR') {
-                  steps {
                         echo sh(returnStdout: true, script: 'env')
-                     //mergeThenPush("github.com/ppresto/patspets",'master')
+                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): terraform apply\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console\nTerraform Runs: ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
             stage('Cleeanup') {
                   steps {
                         sh '''                                   
-                              ls -rf ${WORKSPACE}/*
-                              #rm -rf ${WORKSPACE}/.git*
+                              rm -rf ${WORKSPACE}/*
+                              rm -rf ${WORKSPACE}/.git*
                         '''
                   }
             }
