@@ -91,12 +91,14 @@ pipeline {
             }
             stage('Upload Content') {
                   steps {
+                        echo "URL: ${UPLOAD_URL}"
                         sh '''
+                              url=$(echo ${UPLOAD_URL} | jq -r '.data[0].attributes."upload-url"')
                               curl \
                               --header "Content-Type: application/octet-stream" \
                               --request PUT \
                               --data-binary @"$UPLOAD_FILE_NAME" \
-                              $UPLOAD_URL
+                              $url
                         '''
                   }
             }
