@@ -42,98 +42,44 @@ pipeline {
       }
 
       stages {
-            stage('Create TFE Content') {
+            stage('TFE Init') {
                   steps {
                         // List env vars for ref
                         echo sh(returnStdout: true, script: 'env')
-                        sh '''
-                              tar -C "$TFE_DIRECTORY" -zcvf "$UPLOAD_FILE_NAME" .
-                        '''
-                  }
-            }
-            stage('List TFE Workspaces') {
-                  steps {
-                  sh '''
-                        curl \
-                        --silent --show-error --fail \
-                        --header "Authorization: Bearer $TFE_API_TOKEN" \
-                        --header "Content-Type: application/vnd.api+json" \
-                        ${TFE_API_URL}/organizations/${TFE_ORGANIZATION}/workspaces \
-                        | jq -r \'.data[] | .attributes.name\'
-                  '''
-                  }
-            }
-            stage('Get Workspace ID') {
-                  steps {
-                        script {
-                              env.WORKSPACE_ID = sh(returnStdout: true, script: 'curl \
-                              --header "Authorization: Bearer $TFE_API_TOKEN" \
-                              --header "Content-Type: application/vnd.api+json" \
-                              ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
-                              | jq -r ".data.id"').trim()
+                        setBuildStatus("Initializing Terraform", "PENDING");
+                        dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
+                              sh '''
+                                    curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip
+                                    ./terraform version
+                                    cat <<EOF > remote.tf
+                                    terraform { 
+                                          backend "remote" { 
+                                                hostname     = "${TFE_NAME}"
+                                                organization = "${TFE_ORGANIZATION}"
+                                                token        = "${TFE_API_TOKEN}"
+                                                
+                                                workspaces { 
+                                                      name = "${TFE_WORKSPACE}" 
+                                                }
+                                          }
+                                    }
+                                    EOF
+                                    cat remote.tf
+                                    terraform init
+                                    terraform plan
+                              '''
                         }
-                  }
-            }
-            stage('Create New Config Version') {
-                  steps {
-                        echo "WORKSPACE_ID: ${WORKSPACE_ID}"                           
-                        sh '''
-                              echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
-                        '''
-                        script {
-                              env.UPLOAD_URL = sh(returnStdout: true, script: 'curl \
-                              --header "Authorization: Bearer $TFE_API_TOKEN" \
-                              --header "Content-Type: application/vnd.api+json" \
-                              --request POST \
-                              --data @create_config_version.json \
-                              ${TFE_API_URL}/workspaces/$WORKSPACE_ID/configuration-versions \
-                              | jq -r \'.data.attributes."upload-url"\'').trim()
-                        }
-                  }
-            }
-            stage('Upload Content') {
-                  steps {
-                        setBuildStatus("Uploading Content to ${UPLOAD_URL}", "PENDING");
-                        echo "URL: ${UPLOAD_URL}"
-                        sh '''
-                              curl \
-                              --header "Content-Type: application/octet-stream" \
-                              --request PUT \
-                              --data-binary @"$UPLOAD_FILE_NAME" \
-                              ${UPLOAD_URL}
-                        '''
-                        notifySlack("New Content Uploaded from Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTFE:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
-                  }
-            }
-            
-            stage('Four') {
-                  parallel { 
-                        stage('Cleanup') {
-                              steps {
-                                    sh '''
-                                    rm "${UPLOAD_FILE_NAME}"
-                                    rm ./create_config_version.json
-                                    rm -rf ${WORKSPACE}/*
-                                    rm -rf ${WORKSPACE}/.git*
-                                    '''
-                              }
-                        }
-                        stage('Parrallel test') {
-                              steps {
-                                    echo "Running the integration test..."
-                              }
-                        }
+                        notifySlack("TFE Content Planned: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTFE:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
       }
 
       post {
-    success {
-        setBuildStatus("Build Succeeded", "SUCCESS");
-    }
-    failure {
-        setBuildStatus("Build Failed", "FAILURE");
-    }
-  }
-
+            success {
+                  setBuildStatus("Build Succeeded", "SUCCESS");
+            }
+            failure {
+                  setBuildStatus("Build Failed", "FAILURE");
+            }
+      }
 }
