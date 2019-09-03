@@ -1,4 +1,6 @@
 import groovy.json.JsonOutput
+
+
 //slack env vars
 env.slack_url = 'https://hooks.slack.com/services/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'
 env.notification_channel = 'ppresto-alerts'
