@@ -37,8 +37,9 @@ pipeline {
             stage('Clone Repo') {
                   steps {
                         git branch: 'master',
-                              credentialsId: 'github-myjenkins-token',
+                              credentialsId: 'github-ppresto',
                               url: "${GIT_REPO}"
+                        echo sh(returnStdout: true, script: 'env')
                   }
             }
             stage('Create TFE Content') {
