@@ -104,7 +104,8 @@ pipeline {
                                     sh '''
                                     rm "${UPLOAD_FILE_NAME}"
                                     rm ./create_config_version.json
-                                    rm -rf "${WORKSPACE}/*"
+                                    rm -rf ${WORKSPACE}/*
+                                    rm -rf ${WORKSPACE}/.*
                                     '''
                               }
                         }
