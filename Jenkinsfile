@@ -93,7 +93,7 @@ pipeline {
                   steps {
                         echo "URL: ${UPLOAD_URL}"
                         sh '''
-                              url=$(echo ${UPLOAD_URL} | jq -r '.data[0].attributes."upload-url"')
+                              url=$(echo ${UPLOAD_URL} | jq -r '.data.attributes."upload-url"')
                               curl \
                               --header "Content-Type: application/octet-stream" \
                               --request PUT \
