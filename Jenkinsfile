@@ -51,13 +51,11 @@ pipeline {
                               sh '''
                                     if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
                                     ./terraform version
-
-cat <<CONFIG | tee .terraformrc
+                                    cat <<CONFIG | tee .terraformrc
 credentials "app.terraform.io" {
   token = "${TFE_API_TOKEN}"
 }
 CONFIG
-
                                     ./terraform init
                               '''
                         }
