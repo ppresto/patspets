@@ -34,14 +34,6 @@ pipeline {
       }
 
       stages {
-            stage('Clone Repo') {
-                  steps {
-                        git branch: 'master',
-                              credentialsId: 'github-ppresto',
-                              url: "${GIT_REPO}"
-                        echo sh(returnStdout: true, script: 'env')
-                  }
-            }
             stage('Create TFE Content') {
                   steps {
                         sh '''
