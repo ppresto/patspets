@@ -20,7 +20,7 @@ def mergeThenPush(repo, toBranch) {
   withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
     sh "git checkout ${toBranch}"
     sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
-    sh "git merge ${env.BRANCH_NAME} --no-edit"
+    sh "git merge origin/${env.BRANCH_NAME} --no-edit"
     sh "git push https://${gitUser}:${gitPass}@${repo} ${env.BRANCH_NAME}"
   }
 }
