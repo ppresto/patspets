@@ -18,7 +18,6 @@ void setBuildStatus(String message, String state) {
 // Github - Merge PR to Master and Push
 def mergeThenPush(repo, toBranch) {
   withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
-        gitUser="ppresto"
     sh "git checkout ${toBranch}"
     sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
     sh "git merge ${env.BRANCH_NAME} --no-edit"
@@ -85,7 +84,7 @@ CONFIG
             }
             stage('Merge PR') {
                   steps {
-                     mergeThenPush("${GIT_REPO}",'master')
+                     mergeThenPush("github.com/ppresto/patspets",'master')
                   }
             }
             stage('Cleeanup') {
