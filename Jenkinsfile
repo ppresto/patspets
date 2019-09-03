@@ -84,7 +84,7 @@ CONFIG
             }
             stage('Merge PR') {
                   steps {
-                     mergeThenPush(${GIT_REPO},'master')
+                     mergeThenPush("${GIT_REPO}",'master')
                   }
             }
             stage('Cleeanup') {
