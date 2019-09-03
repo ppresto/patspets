@@ -84,9 +84,8 @@ pipeline {
                               --request POST \
                               --data @create_config_version.json \
                               ${TFE_API_URL}/workspaces/$WORKSPACE_ID/configuration-versions \
-                              | jq -r ').trim()
+                              | jq -r \'.data.attributes."upload-url"\'').trim()
                         }
-                        notifySlack("New Configuration Version Created! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
                   }
             }
             stage('Upload Content') {
@@ -98,16 +97,20 @@ pipeline {
                               --header "Content-Type: application/octet-stream" \
                               --request PUT \
                               --data-binary @"$UPLOAD_FILE_NAME" \
-                              $url
+                              ${UPLOAD_URL}
                         '''
+                        notifySlack("New Content Uploaded from Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTFE:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
             
             stage('Four') {
                   parallel { 
-                        stage('Unit Test') {
+                        stage('Cleanup') {
                               steps {
-                                    echo "Running the unit test..."
+                                    sh '''
+                                    rm "${UPLOAD_FILE_NAME}"
+                                    rm ./create_config_version.json
+                                    '''
                               }
                         }
                         stage('Parrallel test') {
