@@ -15,6 +15,16 @@ void setBuildStatus(String message, String state) {
   ]);
 }
 
+// Github - Merge PR to Master and Push
+def mergeThenPush(repo, toBranch) {
+  withCredentials([usernamePassword(credentialsId: 'SVC-GIT-DC4', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
+    sh "git checkout ${toBranch}"
+    sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
+    sh "git merge ${env.BRANCH_NAME} --no-edit"
+    sh "git push https://${gitUser}:${gitPass}@${repo} ${env.BRANCH_NAME}"
+  }
+}
+
 def notifySlack(text, channel, attachments) {
     def payload = JsonOutput.toJson([text: text,
         channel: channel,
@@ -70,6 +80,11 @@ CONFIG
                         }
                         echo sh(returnStdout: true, script: 'env')
                         notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): terraform apply\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console\nTerraform Runs: ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                  }
+            }
+            stage('Merge PR') {
+                  steps {
+                     mergeThenPush(${GIT_REPO},'master')
                   }
             }
             stage('Cleeanup') {
