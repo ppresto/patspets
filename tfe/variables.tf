@@ -3,10 +3,6 @@ variable "aws_region" {
   default     = "us-west-2"
 }
 
-variable "owner" {
-  description = "ppresto@hashicorp.com"
-}
-
 variable "name_prefix" {
   description = "Enter your name or unique description here."
 }
