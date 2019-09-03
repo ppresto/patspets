@@ -38,7 +38,7 @@ pipeline {
             TFE_API_TOKEN = credentials("tfe_api_token")
             TFE_DIRECTORY = "tfe"
             UPLOAD_FILE_NAME = "./content.${TFE_WORKSPACE}.tar.gz"
-            
+            TERRAFORM_CONFIG = "${WORKSPACE}/${TFE_DIRECTORY}/.terraformrc"
       }
 
       stages {
@@ -51,17 +51,9 @@ pipeline {
                               sh '''
                                     if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
                                     ./terraform version
-                                    cat <<CONFIG | tee remote.tf
-terraform { 
-      backend "remote" { 
-            hostname     = "${TFE_NAME}"
-            organization = "${TFE_ORGANIZATION}"
-            token        = "${TFE_API_TOKEN}"
-            
-            workspaces { 
-                  name = "${TFE_WORKSPACE}" 
-            }
-      }
+                                    cat <<CONFIG | tee .terraformrc
+credentials "app.terraform.io" {
+  token = "${TFE_API_TOKEN}"
 }
 CONFIG
                                     ./terraform init
