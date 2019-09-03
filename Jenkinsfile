@@ -91,8 +91,8 @@ CONFIG
             stage('Cleeanup') {
                   steps {
                         sh '''                                   
-                              rm -rf ${WORKSPACE}/*
-                              rm -rf ${WORKSPACE}/.git*
+                              ls -rf ${WORKSPACE}/*
+                              #rm -rf ${WORKSPACE}/.git*
                         '''
                   }
             }
