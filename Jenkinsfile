@@ -49,7 +49,7 @@ pipeline {
                         setBuildStatus("Initializing Terraform", "PENDING");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
                               sh '''
-                                    curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip
+                                    if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
                                     ./terraform version
                                     cat <<CONFIG | tee remote.tf
 terraform { 
@@ -64,9 +64,8 @@ terraform {
       }
 }
 CONFIG
-                                    cat remote.tf
-                                    terraform init
-                                    terraform plan
+                                    ./terraform init
+                                    ./terraform plan
                               '''
                         }
                         notifySlack("TFE Content Planned: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTFE:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
