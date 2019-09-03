@@ -16,6 +16,8 @@ def notifySlack(text, channel, attachments) {
     sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
 }
 
+def WORKSPACE_ID = "unknown"
+
 pipeline {
       agent any
       environment {
@@ -60,21 +62,20 @@ pipeline {
             }
             stage('Get Workspace ID') {
                   steps {
-                        sh '''
-                              WORKSPACE_ID=$(curl \
+                        script {
+                              WORKSPACE_ID = sh(returnStdout: true, script: 'curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
                               --header "Content-Type: application/vnd.api+json" \
                               ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
-                              | jq -r '.data.id')
-                              echo ${WORKSPACE_ID} > workspaceid.txt
-                        '''
+                              | jq -r ".data.id"'
+                        }
                   }
             }
             stage('Create New Config Version') {
                   steps {
                         sh '''
                               echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
-                              WORKSPACE_ID = readFile('workspaceid.txt').trim()
+                              echo ${WORKSPACE_ID}
                               UPLOAD_URL=$(curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
                               --header "Content-Type: application/vnd.api+json" \
