@@ -62,6 +62,7 @@ pipeline {
             }
             stage('Get Workspace ID') {
                   steps {
+                        sh 'echo ${WORKSPACE_ID}'
                         script {
                               WORKSPACE_ID = sh(returnStdout: true, script: 'curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
@@ -69,13 +70,14 @@ pipeline {
                               ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
                               | jq -r ".data.id"')
                         }
+                        sh 'echo ${WORKSPACE_ID}'
                   }
             }
             stage('Create New Config Version') {
                   steps {
                         sh '''
                               echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
-                              echo ${WORKSPACE_ID}
+                              echo "WorkspaceID: ${WORKSPACE_ID}"
                               UPLOAD_URL=$(curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
                               --header "Content-Type: application/vnd.api+json" \
