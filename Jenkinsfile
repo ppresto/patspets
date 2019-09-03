@@ -36,6 +36,8 @@ pipeline {
       stages {
             stage('Create TFE Content') {
                   steps {
+                        // List env vars for ref
+                        echo sh(returnStdout: true, script: 'env')
                         sh '''
                               tar -C "$TFE_DIRECTORY" -zcvf "$UPLOAD_FILE_NAME" .
                         '''
@@ -102,6 +104,7 @@ pipeline {
                                     sh '''
                                     rm "${UPLOAD_FILE_NAME}"
                                     rm ./create_config_version.json
+                                    rm -rf "${WORKSPACE}/*"
                                     '''
                               }
                         }
