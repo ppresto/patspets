@@ -70,7 +70,7 @@ pipeline {
                       steps {
                             dir("${env.WORKSPACE}/tfe"){
                                 sh '''
-                                ./terraform apply
+                                ./terraform plan
                                 '''
                             }
                       }
