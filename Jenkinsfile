@@ -46,7 +46,6 @@ pipeline {
                         '''
                   }
             }
-            /*
             stage('List TFE Workspaces') {
                   steps {
                   sh '''
@@ -111,6 +110,5 @@ pipeline {
                         }
                   }
             }
-            */
       }
 }
