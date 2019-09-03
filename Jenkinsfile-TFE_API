@@ -76,6 +76,7 @@ pipeline {
             }
             stage('Create New Config Version') {
                   steps {
+                        setBuildStatus("Creating New Config Version", "PENDING");
                         echo "WORKSPACE_ID: ${WORKSPACE_ID}"                           
                         sh '''
                               echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
@@ -91,7 +92,7 @@ pipeline {
                         }
                   }
             }
-            stage('Upload Content') {
+            stage('Upload New Workspace Content') {
                   steps {
                         setBuildStatus("Uploading Content to ${UPLOAD_URL}", "PENDING");
                         echo "URL: ${UPLOAD_URL}"
@@ -102,7 +103,7 @@ pipeline {
                               --data-binary @"$UPLOAD_FILE_NAME" \
                               ${UPLOAD_URL}
                         '''
-                        notifySlack("New Content Uploaded from Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTFE:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                        notifySlack(""WORKSPACE ( ${TFE_WORKSPACE} ): New Content Uploaded\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTerraform Runs:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
             
