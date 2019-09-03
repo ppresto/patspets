@@ -94,7 +94,6 @@ CONFIG
                                           error "Unable to merge!"
                                     } else {
                                           // Send a Slack message, etc
-                                          }
                                     }
                               }
                         }
