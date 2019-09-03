@@ -17,7 +17,8 @@ void setBuildStatus(String message, String state) {
 
 // Github - Merge PR to Master and Push
 def mergeThenPush(repo, toBranch) {
-  withCredentials([usernamePassword(credentialsId: 'SVC-GIT-DC4', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
+  withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
+        gitUser="ppresto"
     sh "git checkout ${toBranch}"
     sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
     sh "git merge ${env.BRANCH_NAME} --no-edit"
