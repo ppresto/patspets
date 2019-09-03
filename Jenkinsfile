@@ -45,7 +45,6 @@ pipeline {
             stage('Terraform Init') {
                   steps {
                         // List env vars for ref
-                        echo sh(returnStdout: true, script: 'env')
                         setBuildStatus("Initializing Terraform", "PENDING");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
                               sh '''
@@ -63,14 +62,22 @@ CONFIG
             }
             stage('Terraform Plan & Apply') {
                   steps {
-                        // List env vars for ref
                         setBuildStatus("Terraform Apply", "PENDING");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
                               sh '''                                   
                                     ./terraform apply
                               '''
                         }
+                        echo sh(returnStdout: true, script: 'env')
                         notifySlack("${TFE_WORKSPACE}: terraform apply\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console\nTerraform Job: ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                  }
+            }
+            stage('Cleeanup') {
+                  steps {
+                        sh '''                                   
+                              rm -rf ${WORKSPACE}/*
+                              rm -rf ${WORKSPACE}/.git*
+                        '''
                   }
             }
       }
