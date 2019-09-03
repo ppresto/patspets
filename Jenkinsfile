@@ -66,6 +66,7 @@ pipeline {
                               --header "Content-Type: application/vnd.api+json" \
                               ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
                               | jq -r '.data.id')
+                              sh 'echo ${WORKSPACE_ID} > workspaceid.txt'
                         '''
                   }
             }
@@ -73,6 +74,7 @@ pipeline {
                   steps {
                         sh '''
                               echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
+                              WORKSPACE_ID = readFile('workspaceid.txt').trim()
                               UPLOAD_URL=$(curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
                               --header "Content-Type: application/vnd.api+json" \
