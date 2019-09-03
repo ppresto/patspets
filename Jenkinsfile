@@ -56,7 +56,7 @@ pipeline {
       stages {
             stage('Terraform Init') {
                   steps {
-                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Jenkins Job http://localhost:8080/job/$JOB_NAME/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
+                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Jenkins Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
 
                         // List env vars for ref
                         setBuildStatus("Initializing Terraform", "PENDING");
