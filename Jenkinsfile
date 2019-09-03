@@ -30,86 +30,88 @@ pipeline {
             UPLOAD_FILE_NAME="./content.tar.gz"
       }
 
-            stages {
-                  stage('Clone Repo') {
-                        steps {
-                              git branch: 'master',
-                                    credentialsId: 'github-myjenkins-token',
-                                    url: "${GIT_REPO}"
-                              }
+      stages {
+            stage('Clone Repo') {
+                  steps {
+                        git branch: 'master',
+                              credentialsId: 'github-myjenkins-token',
+                              url: "${GIT_REPO}"
                         }
                   }
-                  stage('Create TFE Content') {
-                        steps {
-                              sh '''
+            }
+            stage('Create TFE Content') {
+                  steps {
+                        sh '''
                               UPLOAD_FILE_NAME="./content-$(date +%s).tar.gz"
                               tar -zcvf "$UPLOAD_FILE_NAME" "$TFE_DIRECTORY" .
-                              '''
-                        }
+                        '''
                   }
-                  stage('List TFE Workspaces') {
-                        steps {
+            }
+            /*
+            stage('List TFE Workspaces') {
+                  steps {
+                  sh '''
+                        curl \
+                        --silent --show-error --fail \
+                        --header "Authorization: Bearer $TFE_API_TOKEN" \
+                        --header "Content-Type: application/vnd.api+json" \
+                        ${TFE_API_URL}/organizations/${TFE_ORGANIZATION}/workspaces \
+                        | jq -r \'.data[] | .attributes.name\'
+                  '''
+                  }
+            }
+            stage('Get Workspace ID') {
+                  steps {
                         sh '''
-                              curl \
-                              --silent --show-error --fail \
+                              WORKSPACE_ID=($(curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
                               --header "Content-Type: application/vnd.api+json" \
-                              ${TFE_API_URL}/organizations/${TFE_ORGANIZATION}/workspaces \
-                              | jq -r \'.data[] | .attributes.name\'
+                              ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
+                              | jq -r '.data.id'))
                         '''
-                        }
                   }
-                  stage('Get Workspace ID') {
-                        steps {
-                              sh '''
-                                    WORKSPACE_ID=($(curl \
-                                    --header "Authorization: Bearer $TFE_API_TOKEN" \
-                                    --header "Content-Type: application/vnd.api+json" \
-                                    ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
-                                    | jq -r '.data.id'))
-                              '''
-                        }
+            }
+            stage('Create New Config Version') {
+                  steps {
+                        sh '''
+                              echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
+                              UPLOAD_URL=($(curl \
+                              --header "Authorization: Bearer $TFE_API_TOKEN" \
+                              --header "Content-Type: application/vnd.api+json" \
+                              --request POST \
+                              --data @create_config_version.json \
+                              ${TFE_API_URL}/workspaces/$WORKSPACE_ID/configuration-versions \
+                              | jq -r '.data.attributes."upload-url"'))
+                        '''
+                        notifySlack("New Configuration Version Created! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
                   }
-                  stage('Create New Config Version') {
-                        steps {
-                              sh '''
-                                    echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
-                                    UPLOAD_URL=($(curl \
-                                    --header "Authorization: Bearer $TFE_API_TOKEN" \
-                                    --header "Content-Type: application/vnd.api+json" \
-                                    --request POST \
-                                    --data @create_config_version.json \
-                                    ${TFE_API_URL}/workspaces/$WORKSPACE_ID/configuration-versions \
-                                    | jq -r '.data.attributes."upload-url"'))
-                              '''
-                              notifySlack("New Configuration Version Created! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
-                        }
+            }
+            stage('Upload Content') {
+                  steps {
+                        sh '''
+                              curl \
+                              --header "Content-Type: application/octet-stream" \
+                              --request PUT \
+                              --data-binary @"$UPLOAD_FILE_NAME" \
+                              $UPLOAD_URL
+                        '''
                   }
-                  stage('Upload Content') {
-                        steps {
-                              sh '''
-                                    curl \
-                                    --header "Content-Type: application/octet-stream" \
-                                    --request PUT \
-                                    --data-binary @"$UPLOAD_FILE_NAME" \
-                                    $UPLOAD_URL
-                              '''
-                        }
-                  }
-                  
-                  stage('Four') {
+            }
+            
+            stage('Four') {
                   parallel { 
-                              stage('Unit Test') {
-                                    steps {
-                                          echo "Running the unit test..."
-                                    }
+                        stage('Unit Test') {
+                              steps {
+                                    echo "Running the unit test..."
                               }
-                              stage('Parrallel test') {
-                                    steps {
-                                          echo "Running the integration test..."
-                                    }
+                        }
+                        stage('Parrallel test') {
+                              steps {
+                                    echo "Running the integration test..."
                               }
                         }
                   }
             }
+            */
+      }
 }
