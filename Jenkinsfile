@@ -84,7 +84,7 @@ pipeline {
                               --request POST \
                               --data @create_config_version.json \
                               ${TFE_API_URL}/workspaces/$WORKSPACE_ID/configuration-versions \
-                              | jq -r ".data[0].attributes.\"upload-url\""').trim()
+                              | jq -r ').trim()
                         }
                         notifySlack("New Configuration Version Created! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
                   }
