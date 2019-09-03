@@ -85,18 +85,6 @@ CONFIG
             stage('Merge PR') {
                   steps {
                      //mergeThenPush("github.com/ppresto/patspets",'master')
-                     withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
-                              script {
-                                    sh "curl -o - -s -w \"\n%{http_code}\n\" -X PUT -d '{\"commit_title\": \"Merge pull request\"}'  https://github.com/api/v3/repos/ppresto/patspets/pulls/$CHANGE_ID/merge?access_token=$gitPass | tail -1 > mergeResult.txt"
-
-                                    def mergeResult = readFile('mergeResult.txt').trim()
-                                    if (mergeResult != "200") {
-                                          error "Unable to merge!"
-                                    } else {
-                                          // Send a Slack message, etc
-                                    }
-                              }
-                        }
                   }
             }
             stage('Cleeanup') {
