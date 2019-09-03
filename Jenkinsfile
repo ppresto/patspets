@@ -16,6 +16,8 @@ def notifySlack(text, channel, attachments) {
     sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
 }
 
+//def WORKSPACE_ID = "unknown"
+
 pipeline {
       agent any
       environment {
@@ -23,81 +25,99 @@ pipeline {
             TFE_NAME = "app.terraform.io"
             TFE_URL = "https://app.terraform.io"
             TFE_ORGANIZATION = "Patrick"
+            TFE_WORKSPACE = "patspets_master"
             TFE_API_URL = "${TFE_URL}/api/v2"
             TFE_API_TOKEN = credentials("tfe_api_token")
+            TFE_DIRECTORY = "tfe"
+            UPLOAD_FILE_NAME = "./content.${TFE_WORKSPACE}.tar.gz"
+            
       }
 
-            stages {
-                  stage('Preparation') {
-                        steps {
-                            git branch: 'master',
-                                credentialsId: 'github-myjenkins-token',
-                                url: "${GIT_REPO}"
-
-                            dir("${env.WORKSPACE}/tfe"){
-                                sh '''
-                                curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip
-                                pwd
-                                ./terraform version
-                              '''
-                            }
-
-                        }
+      stages {
+            stage('Clone Repo') {
+                  steps {
+                        git branch: 'master',
+                              credentialsId: 'github-myjenkins-token',
+                              url: "${GIT_REPO}"
                   }
-                  stage('TFE Workstation list ') {
-                        steps {
+            }
+            stage('Create TFE Content') {
+                  steps {
                         sh '''
-                              curl \
-                              --silent --show-error --fail \
+                              tar -C "$TFE_DIRECTORY" -zcvf "$UPLOAD_FILE_NAME" .
+                        '''
+                  }
+            }
+            stage('List TFE Workspaces') {
+                  steps {
+                  sh '''
+                        curl \
+                        --silent --show-error --fail \
+                        --header "Authorization: Bearer $TFE_API_TOKEN" \
+                        --header "Content-Type: application/vnd.api+json" \
+                        ${TFE_API_URL}/organizations/${TFE_ORGANIZATION}/workspaces \
+                        | jq -r \'.data[] | .attributes.name\'
+                  '''
+                  }
+            }
+            stage('Get Workspace ID') {
+                  steps {
+                        script {
+                              env.WORKSPACE_ID = sh(returnStdout: true, script: 'curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
                               --header "Content-Type: application/vnd.api+json" \
-                              ${TFE_API_URL}/organizations/${TFE_ORGANIZATION}/workspaces \
-                              | jq -r \'.data[] | .attributes.name\'
-                        '''
+                              ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
+                              | jq -r ".data.id"').trim()
                         }
                   }
-                  stage('Terraform Init') {
-                        steps {
-                            dir("${env.WORKSPACE}/tfe"){
-                                sh '''
-                                ./terraform init -backend-config="TF_ACTION_TFE_TOKEN=${TFE_API_TOKEN}" 
-                                '''
-                            notifySlack("terraform init completed! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
-                            }
-                        }
-                  }
-                  stage('Terraform Plan/Apply') {
-                      steps {
-                            dir("${env.WORKSPACE}/tfe"){
-                                sh '''
-                                ./terraform apply
-                                '''
-                            }
-                      }
-                  }
-                  stage('Three') {
-                  when {
-                        not {
-                              branch "master"
-                        }
-                  }
+            }
+            stage('Create New Config Version') {
                   steps {
-                        echo "Not Master Branch"
+                        echo "WORKSPACE_ID: ${WORKSPACE_ID}"                           
+                        sh '''
+                              echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
+                        '''
+                        script {
+                              env.UPLOAD_URL = sh(returnStdout: true, script: 'curl \
+                              --header "Authorization: Bearer $TFE_API_TOKEN" \
+                              --header "Content-Type: application/vnd.api+json" \
+                              --request POST \
+                              --data @create_config_version.json \
+                              ${TFE_API_URL}/workspaces/$WORKSPACE_ID/configuration-versions \
+                              | jq -r \'.data.attributes."upload-url"\'').trim()
+                        }
                   }
+            }
+            stage('Upload Content') {
+                  steps {
+                        echo "URL: ${UPLOAD_URL}"
+                        sh '''
+                              curl \
+                              --header "Content-Type: application/octet-stream" \
+                              --request PUT \
+                              --data-binary @"$UPLOAD_FILE_NAME" \
+                              ${UPLOAD_URL}
+                        '''
+                        notifySlack("New Content Uploaded from Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTFE:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
-                  stage('Four') {
+            }
+            
+            stage('Four') {
                   parallel { 
-                              stage('Unit Test') {
-                                    steps {
-                                          echo "Running the unit test..."
-                                    }
+                        stage('Cleanup') {
+                              steps {
+                                    sh '''
+                                    rm "${UPLOAD_FILE_NAME}"
+                                    rm ./create_config_version.json
+                                    '''
                               }
-                              stage('Parrallel test') {
-                                    steps {
-                                          echo "Running the integration test..."
-                                    }
+                        }
+                        stage('Parrallel test') {
+                              steps {
+                                    echo "Running the integration test..."
                               }
                         }
                   }
             }
+      }
 }
