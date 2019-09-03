@@ -22,7 +22,7 @@ def mergeThenPush(repo, toBranch) {
       sh "git config --global user.name \"Patrick Presto\""
       sh "git checkout ${toBranch}"
       sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
-      sh "git merge origin/${env.BRANCH_NAME} --no-edit"
+      sh "git merge origin/${env.BRANCH_NAME} --no-ff --no-edit"
       sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
   }
 }
@@ -84,17 +84,11 @@ CONFIG
                         notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): terraform apply\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console\nTerraform Runs: ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
-            stage('Merge PR') {
-                  steps {
-                        echo sh(returnStdout: true, script: 'env')
-                        mergeThenPush("github.com/ppresto/patspets",'master')
-                  }
-            }
             stage('Cleeanup') {
                   steps {
                         sh '''                                   
-                              ls -rf ${WORKSPACE}/*
-                              #rm -rf ${WORKSPACE}/.git*
+                              rm -rf ${WORKSPACE}/*
+                              rm -rf ${WORKSPACE}/.git*
                         '''
                   }
             }
