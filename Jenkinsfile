@@ -51,7 +51,7 @@ pipeline {
                               sh '''
                                     curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip
                                     ./terraform version
-                                    cat <<CONFIG | sudo tee remote.tf
+                                    cat <<CONFIG | tee remote.tf
 terraform { 
       backend "remote" { 
             hostname     = "${TFE_NAME}"
