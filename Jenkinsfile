@@ -51,19 +51,19 @@ pipeline {
                               sh '''
                                     curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip
                                     ./terraform version
-                                    cat <<EOF > remote.tf
-                                    terraform { 
-                                          backend "remote" { 
-                                                hostname     = "${TFE_NAME}"
-                                                organization = "${TFE_ORGANIZATION}"
-                                                token        = "${TFE_API_TOKEN}"
-                                                
-                                                workspaces { 
-                                                      name = "${TFE_WORKSPACE}" 
-                                                }
-                                          }
-                                    }
-                                    EOF
+                                    cat <<CONFIG | sudo tee remote.tf
+terraform { 
+      backend "remote" { 
+            hostname     = "${TFE_NAME}"
+            organization = "${TFE_ORGANIZATION}"
+            token        = "${TFE_API_TOKEN}"
+            
+            workspaces { 
+                  name = "${TFE_WORKSPACE}" 
+            }
+      }
+}
+CONFIG
                                     cat remote.tf
                                     terraform init
                                     terraform plan
