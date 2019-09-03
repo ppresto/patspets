@@ -42,7 +42,7 @@ pipeline {
                   steps {
                         sh '''
                               UPLOAD_FILE_NAME="./content-$(date +%s).tar.gz"
-                              tar -zcvf "$UPLOAD_FILE_NAME" "$TFE_DIRECTORY" .
+                              tar -C "$TFE_DIRECTORY" -zcvf "$UPLOAD_FILE_NAME" .
                         '''
                   }
             }
@@ -61,11 +61,11 @@ pipeline {
             stage('Get Workspace ID') {
                   steps {
                         sh '''
-                              WORKSPACE_ID=($(curl \
+                              WORKSPACE_ID=$(curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
                               --header "Content-Type: application/vnd.api+json" \
                               ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
-                              | jq -r '.data.id'))
+                              | jq -r '.data.id')
                         '''
                   }
             }
