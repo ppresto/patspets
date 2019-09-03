@@ -73,13 +73,13 @@ pipeline {
                   steps {
                         sh '''
                               echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
-                              UPLOAD_URL=($(curl \
+                              UPLOAD_URL=$(curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
                               --header "Content-Type: application/vnd.api+json" \
                               --request POST \
                               --data @create_config_version.json \
                               ${TFE_API_URL}/workspaces/$WORKSPACE_ID/configuration-versions \
-                              | jq -r '.data.attributes."upload-url"'))
+                              | jq -r '.data.attributes."upload-url"')
                         '''
                         notifySlack("New Configuration Version Created! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
                   }
