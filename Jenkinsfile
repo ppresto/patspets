@@ -23,28 +23,31 @@ pipeline {
             TFE_NAME = "app.terraform.io"
             TFE_URL = "https://app.terraform.io"
             TFE_ORGANIZATION = "Patrick"
+            TFE_WORKSPACE = "patspets_master"
             TFE_API_URL = "${TFE_URL}/api/v2"
             TFE_API_TOKEN = credentials("tfe_api_token")
+            TFE_DIRECTORY = "tfe"
+            UPLOAD_FILE_NAME="./content-$(date +%s).tar.gz"
       }
 
             stages {
-                  stage('Preparation') {
+                  stage('Clone Repo') {
                         steps {
-                            git branch: 'master',
-                                credentialsId: 'github-myjenkins-token',
-                                url: "${GIT_REPO}"
-
-                            dir("${env.WORKSPACE}/tfe"){
-                                sh '''
-                                curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip
-                                pwd
-                                ./terraform version
-                              '''
-                            }
-
+                              git branch: 'master',
+                                    credentialsId: 'github-myjenkins-token',
+                                    url: "${GIT_REPO}"
+                              }
                         }
                   }
-                  stage('TFE Workstation list ') {
+                  stage('Create TFE Content') {
+                        steps {
+                              sh '''
+                              UPLOAD_FILE_NAME="./content-$(date +%s).tar.gz"
+                              tar -zcvf "$UPLOAD_FILE_NAME" "$TFE_DIRECTORY" .
+                              '''
+                        }
+                  }
+                  stage('List TFE Workspaces') {
                         steps {
                         sh '''
                               curl \
@@ -56,35 +59,44 @@ pipeline {
                         '''
                         }
                   }
-                  stage('Terraform Init') {
+                  stage('Get Workspace ID') {
                         steps {
-                            dir("${env.WORKSPACE}/tfe"){
-                                sh '''
-                                ./terraform init
-                                '''
-                            notifySlack("Terriform Init complete! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
-                            }
+                              sh '''
+                                    WORKSPACE_ID=($(curl \
+                                    --header "Authorization: Bearer $TFE_API_TOKEN" \
+                                    --header "Content-Type: application/vnd.api+json" \
+                                    ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
+                                    | jq -r '.data.id'))
+                              '''
                         }
                   }
-                  stage('Terraform Plan/Apply') {
-                      steps {
-                            dir("${env.WORKSPACE}/tfe"){
-                                sh '''
-                                ./terraform plan
-                                '''
-                            }
-                      }
-                  }
-                  stage('Three') {
-                  when {
-                        not {
-                              branch "master"
+                  stage('Create New Config Version') {
+                        steps {
+                              sh '''
+                                    echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
+                                    UPLOAD_URL=($(curl \
+                                    --header "Authorization: Bearer $TFE_API_TOKEN" \
+                                    --header "Content-Type: application/vnd.api+json" \
+                                    --request POST \
+                                    --data @create_config_version.json \
+                                    ${TFE_API_URL}/workspaces/$WORKSPACE_ID/configuration-versions \
+                                    | jq -r '.data.attributes."upload-url"'))
+                              '''
+                              notifySlack("New Configuration Version Created! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
                         }
                   }
-                  steps {
-                        echo "Not Master Branch"
+                  stage('Upload Content') {
+                        steps {
+                              sh '''
+                                    curl \
+                                    --header "Content-Type: application/octet-stream" \
+                                    --request PUT \
+                                    --data-binary @"$UPLOAD_FILE_NAME" \
+                                    $UPLOAD_URL
+                              '''
+                        }
                   }
-                  }
+                  
                   stage('Four') {
                   parallel { 
                               stage('Unit Test') {
