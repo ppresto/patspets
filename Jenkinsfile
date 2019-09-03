@@ -1,11 +1,19 @@
 import groovy.json.JsonOutput
 
-//slack env vars
+//slack
 env.slack_url = 'https://hooks.slack.com/services/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'
 env.notification_channel = 'ppresto-alerts'
 
-//jenkins env vars
-env.jenkins_node_label = 'master'
+//Github - Setting Build Status
+void setBuildStatus(String message, String state) {
+  step([
+      $class: "GitHubCommitStatusSetter",
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/ppresto/patspets"],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
+      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
+  ]);
+}
 
 def notifySlack(text, channel, attachments) {
     def payload = JsonOutput.toJson([text: text,
@@ -117,4 +125,14 @@ pipeline {
                   }
             }
       }
+
+      post {
+    success {
+        setBuildStatus("Build Succeeded", "SUCCESS");
+    }
+    failure {
+        setBuildStatus("Build Failed", "FAILURE");
+    }
+  }
+
 }
