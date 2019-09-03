@@ -56,6 +56,8 @@ pipeline {
       stages {
             stage('Terraform Init') {
                   steps {
+                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Jenkins Job http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
+
                         // List env vars for ref
                         setBuildStatus("Initializing Terraform", "PENDING");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
@@ -81,7 +83,7 @@ CONFIG
                               '''
                         }
                         
-                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): terraform apply\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console\nTerraform Runs: ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): Terraform Run - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
             stage('Cleeanup') {
