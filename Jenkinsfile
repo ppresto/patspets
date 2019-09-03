@@ -42,7 +42,7 @@ pipeline {
       }
 
       stages {
-            stage('TFE Init') {
+            stage('Terraform Init') {
                   steps {
                         // List env vars for ref
                         echo sh(returnStdout: true, script: 'env')
@@ -60,7 +60,30 @@ CONFIG
                                     ./terraform plan
                               '''
                         }
+                  }
+            }
+            stage('Terraform Plan') {
+                  steps {
+                        // List env vars for ref
+                        setBuildStatus("Terraform Plan", "PENDING");
+                        dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
+                              sh '''                                   
+                                    ./terraform plan
+                              '''
+                        }
                         notifySlack("TFE Content Planned: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTFE:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                  }
+            }
+            stage('Terraform Apply') {
+                  steps {
+                        // List env vars for ref
+                        setBuildStatus("Terraform Apply", "PENDING");
+                        dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
+                              sh '''                                   
+                                    ./terraform apply
+                              '''
+                        }
+                        notifySlack("${TFE_WORKSPACE}: terraform apply\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console\nTerraform Job: ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
       }
