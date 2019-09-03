@@ -62,7 +62,6 @@ pipeline {
             }
             stage('Get Workspace ID') {
                   steps {
-                        echo "WORKSPACE_ID: ${WORKSPACE_ID}"
                         script {
                               WORKSPACE_ID = sh(returnStdout: true, script: 'curl \
                               --header "Authorization: Bearer $TFE_API_TOKEN" \
@@ -70,12 +69,12 @@ pipeline {
                               ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
                               | jq -r ".data.id"')
                         }
-                        echo "WORKSPACE_ID: ${WORKSPACE_ID}"
                   }
             }
             stage('Create New Config Version') {
                   steps {
                         echo "WORKSPACE_ID: ${WORKSPACE_ID}"
+                        withEnv(["WORKSPACE_ID"]){                             
                         sh '''
                               echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
                               echo "WORKSPACE_ID: ${WORKSPACE_ID}"
@@ -88,6 +87,7 @@ pipeline {
                               | jq -r '.data.attributes."upload-url"')
                         '''
                         notifySlack("New Configuration Version Created! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
+                        }
                   }
             }
             stage('Upload Content') {
