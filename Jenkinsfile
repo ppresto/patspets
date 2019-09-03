@@ -18,10 +18,12 @@ void setBuildStatus(String message, String state) {
 // Github - Merge PR to Master and Push
 def mergeThenPush(repo, toBranch) {
   withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
-    sh "git checkout ${toBranch}"
-    sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
-    sh "git merge origin/${env.BRANCH_NAME} --no-edit"
-    sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
+      sh "git config --global user.email \"ppresto@hashicorp.com\""
+      sh "git config --global user.name \"Patrick Presto\""
+      sh "git checkout ${toBranch}"
+      sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
+      sh "git merge origin/${env.BRANCH_NAME} --no-edit"
+      sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
   }
 }
 
