@@ -60,7 +60,7 @@ pipeline {
                         steps {
                             dir("${env.WORKSPACE}/tfe"){
                                 sh '''
-                                ./terraform init -backend-config="TF_ACTION_TFE_TOKEN=${TFE_API_TOKEN}" 
+                                ./terraform init
                                 '''
                             notifySlack("Terriform Init complete! http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console", notification_channel, [])
                             }
