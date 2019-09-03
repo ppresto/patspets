@@ -27,7 +27,8 @@ pipeline {
             TFE_API_URL = "${TFE_URL}/api/v2"
             TFE_API_TOKEN = credentials("tfe_api_token")
             TFE_DIRECTORY = "tfe"
-            UPLOAD_FILE_NAME = "./content.tar.gz"
+            UPLOAD_FILE_NAME = "./content."sh(script: 'date +%s', , returnStdout: true).trim()".tar.gz"
+            
       }
 
       stages {
@@ -41,7 +42,6 @@ pipeline {
             stage('Create TFE Content') {
                   steps {
                         sh '''
-                              UPLOAD_FILE_NAME="./content-$(date +%s).tar.gz"
                               tar -C "$TFE_DIRECTORY" -zcvf "$UPLOAD_FILE_NAME" .
                         '''
                   }
