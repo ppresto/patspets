@@ -21,7 +21,7 @@ def mergeThenPush(repo, toBranch) {
     sh "git checkout ${toBranch}"
     sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
     sh "git merge origin/${env.BRANCH_NAME} --no-edit"
-    sh "git push https://${gitUser}:${gitPass}@${repo} ${env.BRANCH_NAME}"
+    sh "git push https://${gitUser}:${gitPass}@${repo} origin/${env.BRANCH_NAME}"
   }
 }
 
