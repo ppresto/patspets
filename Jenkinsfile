@@ -87,7 +87,7 @@ CONFIG
             stage('Merge PR') {
                   steps {
                         echo sh(returnStdout: true, script: 'env')
-                     //mergeThenPush("github.com/ppresto/patspets",'master')
+                        mergeThenPush("github.com/ppresto/patspets",'master')
                   }
             }
             stage('Cleeanup') {
