@@ -1,10 +1,20 @@
 import groovy.json.JsonOutput
-
-//slack
+// Global Variables
 env.slack_url = 'https://hooks.slack.com/services/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'
 env.notification_channel = 'ppresto-alerts'
 
-//Github - Setting Build Status
+//Slack - Send Slack Notifications at important stages of your pipeline
+def notifySlack(text, channel, attachments) {
+    def payload = JsonOutput.toJson([text: text,
+        channel: channel,
+        username: "Jenkins",
+        attachments: attachments
+    ])
+    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+}
+
+
+//Github - Dynamically Set Build Status per phase in your Github PR Page
 void setBuildStatus(String message, String state) {
   step([
       $class: "GitHubCommitStatusSetter",
@@ -15,28 +25,17 @@ void setBuildStatus(String message, String state) {
   ]);
 }
 
-// Github - Merge PR to Master and Push
+// Github - Merge and close your PR
 def mergeThenPush(repo, toBranch) {
   withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
       sh "git config --global user.email \"ppresto@hashicorp.com\""
       sh "git config --global user.name \"Patrick Presto\""
       sh "git checkout ${toBranch}"
       sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
-      sh "git merge origin/${env.BRANCH_NAME} --no-edit"
+      sh "git merge origin/${env.BRANCH_NAME} --no-ff --no-edit"
       sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
   }
 }
-
-def notifySlack(text, channel, attachments) {
-    def payload = JsonOutput.toJson([text: text,
-        channel: channel,
-        username: "Jenkins",
-        attachments: attachments
-    ])
-    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
-}
-
-//def WORKSPACE_ID = "unknown"
 
 pipeline {
       agent any
@@ -56,6 +55,8 @@ pipeline {
       stages {
             stage('Terraform Init') {
                   steps {
+                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Jenkins Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
+
                         // List env vars for ref
                         setBuildStatus("Initializing Terraform", "PENDING");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
@@ -81,20 +82,21 @@ CONFIG
                               '''
                         }
                         
-                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): terraform apply\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console\nTerraform Runs: ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): Terraform Run - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
-            stage('Merge PR') {
+            stage('Close PR') {
                   steps {
-                        echo sh(returnStdout: true, script: 'env')
-                        mergeThenPush("github.com/ppresto/patspets",'master')
+                        echo "Merging ${env.BRANCH_NAME} to master"
+                        mergeThenPush("github.com/ppresto/patspets", "master")
                   }
             }
+
             stage('Cleeanup') {
                   steps {
                         sh '''                                   
-                              ls -rf ${WORKSPACE}/*
-                              #rm -rf ${WORKSPACE}/.git*
+                              rm -rf ${WORKSPACE}/*
+                              rm -rf ${WORKSPACE}/.git*
                         '''
                   }
             }

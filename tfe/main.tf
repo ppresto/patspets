@@ -1,25 +1,11 @@
 //--------------------------------------------------------------------
-// Modules
-module "aws_instance" {
-  source             = "app.terraform.io/Patrick/aws_instance/aws"
-  version            = "1.5"
-  name_prefix        = "${var.name_prefix}"
-  instance_type      = "${var.instance_type}"
-  ingress_cidr_block = "${var.ingress_cidr_block}"
+// Module - GCP Instances
+module "gce_instance" {
+  source  = "app.terraform.io/Patrick/gce_instance/google"
+  version = "0.1.4"
+  name_prefix = "ppresto-cicd-gce-node"
 }
 
-output "AWS_Address" {
-  value = "${module.aws_instance.public_ip}"
-}
-
-output "private_key" {
-  value = "${module.aws_instance.private_key_pem}"
-}
-
-output "public_key" {
-  value = "${module.aws_instance.public_key_pem}"
-}
-
-output "aws_keypair_name" {
-  value = "${module.aws_instance.aws_keypair_name}"
+output "GCP_Address" {
+  value = "${module.gce_instance.addresses}"
 }
