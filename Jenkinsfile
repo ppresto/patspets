@@ -88,7 +88,7 @@ CONFIG
             stage('Close PR') {
                   steps {
                         echo "Merging ${env.BRANCH_NAME} to master"
-                        mergeThenPush(${env.GIT_REPO}.git, "master")
+                        mergeThenPush("${env.GIT_REPO}.git", "master")
                   }
             }
 
