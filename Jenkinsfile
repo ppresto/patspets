@@ -30,11 +30,8 @@ def mergeThenPush(repo, toBranch) {
   withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
       sh "git config --global user.email \"ppresto@hashicorp.com\""
       sh "git config --global user.name \"Patrick Presto\""
-      sh "git stash"
       sh "git checkout ${toBranch}"
       sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
-      sh "git stash pop"
-      sh "git commit -am 'merging PR'"
       sh "git merge origin/${env.BRANCH_NAME} --no-ff --no-edit"
       sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
   }
@@ -91,7 +88,7 @@ CONFIG
             stage('Close PR') {
                   steps {
                         echo "Merging ${env.BRANCH_NAME} to master"
-                        mergeThenPush("${env.GIT_REPO}.git", "master")
+                        mergeThenPush("github.com/ppresto/patspets", "master")
                   }
             }
 
