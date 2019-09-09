@@ -1,10 +1,20 @@
 import groovy.json.JsonOutput
-
-//slack
+// Global Variables
 env.slack_url = 'https://hooks.slack.com/services/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'
 env.notification_channel = 'ppresto-alerts'
 
-//Github - Setting Build Status
+//Slack - Send Slack Notifications at important stages of your pipeline
+def notifySlack(text, channel, attachments) {
+    def payload = JsonOutput.toJson([text: text,
+        channel: channel,
+        username: "Jenkins",
+        attachments: attachments
+    ])
+    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+}
+
+
+//Github - Dynamically Set Build Status per phase in your Github PR Page
 void setBuildStatus(String message, String state) {
   step([
       $class: "GitHubCommitStatusSetter",
@@ -15,7 +25,7 @@ void setBuildStatus(String message, String state) {
   ]);
 }
 
-// Github - Merge PR to Master and Push
+// Github - Merge and close your PR
 def mergeThenPush(repo, toBranch) {
   withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
       sh "git config --global user.email \"ppresto@hashicorp.com\""
@@ -26,17 +36,6 @@ def mergeThenPush(repo, toBranch) {
       sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
   }
 }
-
-def notifySlack(text, channel, attachments) {
-    def payload = JsonOutput.toJson([text: text,
-        channel: channel,
-        username: "Jenkins",
-        attachments: attachments
-    ])
-    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
-}
-
-//def WORKSPACE_ID = "unknown"
 
 pipeline {
       agent any
@@ -86,6 +85,13 @@ CONFIG
                         notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): Terraform Run - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
+            stage('Close PR') {
+                  steps {
+                        echo "Merging ${env.BRANCH_NAME} to master"
+                        mergeThenPush(${env.GIT_REPO}.git, "master")
+                  }
+            }
+
             stage('Cleeanup') {
                   steps {
                         sh '''                                   
