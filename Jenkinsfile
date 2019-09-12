@@ -73,22 +73,23 @@ CONFIG
                         }
                   }
             }
-            
-            parallel { 
-                  stage('TFE Plan') {
-                        steps {
-                              setBuildStatus("Terraform Apply", "PENDING");
-                              dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
-                                    sh '''                                   
-                                          ./terraform plan
-                                    '''
+            stage('Validation') {
+                  parallel { 
+                        stage('TFE Plan') {
+                              steps {
+                                    setBuildStatus("Terraform Apply", "PENDING");
+                                    dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
+                                          sh '''                                   
+                                                ./terraform plan
+                                          '''
+                                    }
+                                    notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Terraform Plan - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                              }        
+                        }
+                        stage('TFE Sentinal Policies') {
+                              steps {
+                                    echo "Running the integration test..."
                               }
-                              notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Terraform Plan - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
-                        }        
-                  }
-                  stage('TFE Sentinal Policies') {
-                        steps {
-                              echo "Running the integration test..."
                         }
                   }
             }
