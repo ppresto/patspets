@@ -69,8 +69,8 @@ cyan "Initialize the remote backend and download module dependencies"
 pe "terraform init"
 
 echo
-cyan "Running and example plan command"
-pe "terraform plan"
+cyan "Now Run your Terraform Commands"
+pe "terraform apply"
 
 # clean up sensitive files
 rm -rf ${DIR}/.terraform*

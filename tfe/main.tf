@@ -5,7 +5,7 @@ module "ec2_instance" {
   version = "0.1.6"
   name_prefix = "${var.name_prefix}"
   count = 1
-  instance_type = "t2.micro"
+  instance_type = "t3.large"
   securitygroup_id = "${data.terraform_remote_state.patrick_tf_aws_standard_network.webapp_security_group}"
 }
 
