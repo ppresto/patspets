@@ -1,10 +1,20 @@
 import groovy.json.JsonOutput
-
-//slack
+// Global Variables
 env.slack_url = 'https://hooks.slack.com/services/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'
 env.notification_channel = 'ppresto-alerts'
 
-//Github - Setting Build Status
+//Slack - Send Slack Notifications at important stages of your pipeline
+def notifySlack(text, channel, attachments) {
+    def payload = JsonOutput.toJson([text: text,
+        channel: channel,
+        username: "Jenkins",
+        attachments: attachments
+    ])
+    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+}
+
+
+//Github - Dynamically Set Build Status per phase in your Github PR Page
 void setBuildStatus(String message, String state) {
   step([
       $class: "GitHubCommitStatusSetter",
@@ -15,16 +25,17 @@ void setBuildStatus(String message, String state) {
   ]);
 }
 
-def notifySlack(text, channel, attachments) {
-    def payload = JsonOutput.toJson([text: text,
-        channel: channel,
-        username: "Jenkins",
-        attachments: attachments
-    ])
-    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+// Github - Merge and close your PR
+def mergeThenPush(repo, toBranch) {
+  withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
+      sh "git config --global user.email \"ppresto@hashicorp.com\""
+      sh "git config --global user.name \"Patrick Presto\""
+      sh "git checkout ${toBranch}"
+      sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
+      sh "git merge origin/${env.BRANCH_NAME} --no-ff --no-edit"
+      sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
+  }
 }
-
-//def WORKSPACE_ID = "unknown"
 
 pipeline {
       agent any
@@ -107,23 +118,38 @@ pipeline {
                   }
             }
             
-            stage('Four') {
+            stage('Post Validation') {
                   parallel { 
-                        stage('Cleanup') {
+                        stage('Integration Tests') {
                               steps {
-                                    sh '''
-                                    rm "${UPLOAD_FILE_NAME}"
-                                    rm ./create_config_version.json
-                                    rm -rf ${WORKSPACE}/*
-                                    rm -rf ${WORKSPACE}/.git*
-                                    '''
+                                    echo "Running test cases"
                               }
                         }
-                        stage('Parrallel test') {
+                        stage('Security Tests') {
                               steps {
-                                    echo "Running the integration test..."
+                                    echo "Running test cases"
                               }
                         }
+                        stage('Functional Tests') {
+                              steps {
+                                    echo "Running test cases"
+                              }      
+                        }
+                  }
+            }
+            stage('Merge') {
+                  steps {
+                        echo "Merging ${env.BRANCH_NAME} to master"
+                        mergeThenPush("github.com/ppresto/patspets", "master")
+                        notifySlack("${TFE_WORKSPACE} - PR Merged - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+
+                  }
+            }
+            stage('Clean Up') {
+                  steps {
+                        sh '''                                   
+                              rm -rf ${WORKSPACE}/.git*
+                        '''
                   }
             }
       }
