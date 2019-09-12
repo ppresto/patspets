@@ -53,7 +53,7 @@ pipeline {
       }
 
       stages {
-            stage('TFE Init') {
+            stage('initialize') {
                   steps {
                         notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Jenkins Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
 
@@ -73,23 +73,47 @@ CONFIG
                         }
                   }
             }
-            stage('Validation') {
+            stage('Provision') {
                   parallel { 
-                        stage('TFE Plan') {
+                        stage('terraform plan') {
+                              steps {
+                                    echo "Running terraform plan"
+                              }
+                        }
+                        stage('Sentinal Policy Check') {
+                              steps {
+                                    echo "Checking Sentinel Policies"
+                              }
+                        }
+                        stage('terraform apply') {
                               steps {
                                     setBuildStatus("Terraform Apply", "PENDING");
                                     dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
                                           sh '''                                   
-                                                ./terraform plan
+                                                ./terraform apply
                                           '''
                                     }
                                     notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Terraform Plan - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                               }        
                         }
-                        stage('TFE Sentinal Policies') {
+                  }
+            }
+            stage('Validate') {
+                  parallel { 
+                        stage('integration') {
                               steps {
-                                    echo "Running the integration test..."
+                                    echo "Running test cases"
                               }
+                        }
+                        stage('security') {
+                              steps {
+                                    echo "Running test cases"
+                              }
+                        }
+                        stage('functionality') {
+                              steps {
+                                    echo "Running test cases"
+                              }      
                         }
                   }
             }
@@ -99,17 +123,6 @@ CONFIG
                         mergeThenPush("github.com/ppresto/patspets", "master")
                   }
             }
-            stage('TFE Apply') {
-                        steps {
-                              setBuildStatus("Terraform Apply", "PENDING");
-                              dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
-                                    sh '''                                   
-                                          ./terraform apply
-                                    '''
-                              }
-                              notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Terraform Apply - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
-                        }        
-                  }
             stage('Clean Up') {
                   steps {
                         sh '''                                   
