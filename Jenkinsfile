@@ -62,42 +62,41 @@ pipeline {
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
                               sh '''
                                     if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
+                                    env
                                     ./terraform version
 cat <<CONFIG | tee .terraformrc
 credentials "${TFE_NAME}" {
   token = "${TFE_API_TOKEN}"
 }
 CONFIG
-                                    ./terraform init
+                                    ./terraform init -backend-config=backend-master.hcl
                               '''
                         }
                   }
             }
-            stage('Provision') {
-                  parallel { 
-                        stage('Terraform Plan') {
-                              steps {
-                                    echo "Running terraform plan"
-                              }
-                        }
-                        stage('Sentinal Policy Check') {
-                              steps {
-                                    echo "Checking Sentinel Policies"
-                              }
-                        }
-                        stage('Terraform Apply') {
-                              steps {
-                                    setBuildStatus("Terraform Apply", "PENDING");
-                                    dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
-                                          sh '''                                   
-                                                ./terraform apply
-                                          '''
-                                    }
-                                    notifySlack("${TFE_WORKSPACE} - Terraform Apply - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
-                              }        
-                        }
+
+            stage('Terraform Plan') {
+                  steps {
+                        echo "Running terraform plan"
                   }
             }
+            stage('Sentinal Policy Check') {
+                  steps {
+                        echo "Checking Sentinel Policies"
+                  }
+            }
+            stage('Terraform Apply') {
+                  steps {
+                        setBuildStatus("Terraform Apply", "PENDING");
+                        dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
+                              sh '''                                   
+                                    ./terraform apply
+                              '''
+                        }
+                        notifySlack("${TFE_WORKSPACE} - Terraform Apply - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                  }        
+            }
+
             stage('Post Validation') {
                   parallel { 
                         stage('Integration Tests') {
