@@ -53,18 +53,19 @@ pipeline {
       }
 
       stages {
-            stage('Terraform Init') {
+            stage('initialize') {
                   steps {
-                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Jenkins Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
+                        notifySlack("${TFE_WORKSPACE} - Initializing Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
 
                         // List env vars for ref
-                        setBuildStatus("Initializing Terraform", "PENDING");
+                        setBuildStatus("Initializing Terraform", "Initializing");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
                               sh '''
                                     if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
+                                    env
                                     ./terraform version
-                                    cat <<CONFIG | tee .terraformrc
-credentials "app.terraform.io" {
+cat <<CONFIG | tee .terraformrc
+credentials "${TFE_NAME}" {
   token = "${TFE_API_TOKEN}"
 }
 CONFIG
@@ -73,7 +74,18 @@ CONFIG
                         }
                   }
             }
-            stage('Terraform Plan & Apply') {
+
+            stage('Terraform Plan') {
+                  steps {
+                        echo "Running terraform plan"
+                  }
+            }
+            stage('Sentinal Policy Check') {
+                  steps {
+                        echo "Checking Sentinel Policies"
+                  }
+            }
+            stage('Terraform Apply') {
                   steps {
                         setBuildStatus("Terraform Apply", "PENDING");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
@@ -81,21 +93,40 @@ CONFIG
                                     ./terraform apply
                               '''
                         }
-                        
-                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): Terraform Run - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                        notifySlack("${TFE_WORKSPACE} - Terraform Apply - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                  }        
+            }
+
+            stage('Post Validation') {
+                  parallel { 
+                        stage('Integration Tests') {
+                              steps {
+                                    echo "Running test cases"
+                              }
+                        }
+                        stage('Security Tests') {
+                              steps {
+                                    echo "Running test cases"
+                              }
+                        }
+                        stage('Functional Tests') {
+                              steps {
+                                    echo "Running test cases"
+                              }      
+                        }
                   }
             }
-            stage('Close PR') {
+            stage('Merge') {
                   steps {
                         echo "Merging ${env.BRANCH_NAME} to master"
                         mergeThenPush("github.com/ppresto/patspets", "master")
+                        notifySlack("${TFE_WORKSPACE} - PR Merged - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+
                   }
             }
-
-            stage('Cleeanup') {
+            stage('Clean Up') {
                   steps {
                         sh '''                                   
-                              rm -rf ${WORKSPACE}/*
                               rm -rf ${WORKSPACE}/.git*
                         '''
                   }
