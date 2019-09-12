@@ -5,6 +5,7 @@ module "gce_instance" {
   version = "0.1.4"
   name_prefix = "${var.name_prefix}"
   count = 1
+  machine_type = "n1-standard-1"
 }
 
 output "GCP_Address" {
