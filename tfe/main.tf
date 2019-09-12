@@ -3,7 +3,7 @@
 module "gce_instance" {
   source  = "app.terraform.io/Patrick/gce_instance/google"
   version = "0.1.4"
-  name_prefix = "${var.name_prefix}"
+  name_prefix = "${replace(var.name_prefix,"/_/","-")}"  #replace _ to meet GCE naming requirements
   count = 1
   machine_type = "n1-standard-1"
 }
