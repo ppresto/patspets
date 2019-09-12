@@ -82,7 +82,7 @@ CONFIG
                               '''
                         }
                         
-                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ): Terraform Run - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Terraform Apply - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
             stage('Close PR') {
