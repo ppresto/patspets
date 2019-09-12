@@ -75,7 +75,7 @@ CONFIG
             }
             stage('Provision') {
                   parallel { 
-                        stage('terraform plan') {
+                        stage('Terraform Plan') {
                               steps {
                                     echo "Running terraform plan"
                               }
@@ -85,7 +85,7 @@ CONFIG
                                     echo "Checking Sentinel Policies"
                               }
                         }
-                        stage('terraform apply') {
+                        stage('Terraform Apply') {
                               steps {
                                     setBuildStatus("Terraform Apply", "PENDING");
                                     dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
@@ -98,19 +98,19 @@ CONFIG
                         }
                   }
             }
-            stage('Validate') {
+            stage('Post Validation') {
                   parallel { 
-                        stage('integration') {
+                        stage('Integration Tests') {
                               steps {
                                     echo "Running test cases"
                               }
                         }
-                        stage('security') {
+                        stage('Security Tests') {
                               steps {
                                     echo "Running test cases"
                               }
                         }
-                        stage('functionality') {
+                        stage('Functional Tests') {
                               steps {
                                     echo "Running test cases"
                               }      
