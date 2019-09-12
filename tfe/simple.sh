@@ -74,4 +74,3 @@ pe "terraform plan"
 
 # clean up sensitive files
 rm -rf ${DIR}/.terraform*
-rm ${DIR}/*.tfstate*
