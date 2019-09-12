@@ -55,10 +55,10 @@ pipeline {
       stages {
             stage('initialize') {
                   steps {
-                        notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Jenkins Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
+                        notifySlack("${TFE_WORKSPACE} - Initializing Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
 
                         // List env vars for ref
-                        setBuildStatus("Initializing Terraform", "PENDING");
+                        setBuildStatus("Initializing Terraform", "Initializing");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
                               sh '''
                                     if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
@@ -93,7 +93,7 @@ CONFIG
                                                 ./terraform apply
                                           '''
                                     }
-                                    notifySlack("WORKSPACE ( ${TFE_WORKSPACE} ) - Terraform Plan - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                                    notifySlack("${TFE_WORKSPACE} - Terraform Apply - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                               }        
                         }
                   }
@@ -121,6 +121,8 @@ CONFIG
                   steps {
                         echo "Merging ${env.BRANCH_NAME} to master"
                         mergeThenPush("github.com/ppresto/patspets", "master")
+                        notifySlack("${TFE_WORKSPACE} - PR Merged - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+
                   }
             }
             stage('Clean Up') {
