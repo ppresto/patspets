@@ -68,6 +68,7 @@ credentials "app.terraform.io" {
   token = "${TFE_API_TOKEN}"
 }
 CONFIG
+                                    sed -i "s/WORKSPACE_NAME_PLACEHOLDER/${TFE_WORKSPACE}/ ./backend.tf"
                                     ./terraform init
                               '''
                         }

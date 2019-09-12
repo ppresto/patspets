@@ -4,7 +4,7 @@ terraform {
         organization = "Patrick"
 
         workspaces {
-            name = "patspets_stage"
+            name = "WORKSPACE_NAME_PLACEHOLDER"
         }
     }
 }
