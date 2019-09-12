@@ -69,7 +69,8 @@ credentials "${TFE_NAME}" {
   token = "${TFE_API_TOKEN}"
 }
 CONFIG
-                                    ./terraform init -backend-config=backend-master.hcl
+                                    #./terraform init -backend-config=backend-master.hcl
+                                    ./terraform init
                               '''
                         }
                   }
