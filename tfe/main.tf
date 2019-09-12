@@ -21,7 +21,7 @@ module "ec2_instance" {
   version = "0.1.5"
   name_prefix = "${var.name_prefix}"
   count = 1
-  instance_type = "t3.large"
+  instance_type = "t2.micro"
   subnet_id = "${data.terraform_remote_state.patrick_tf_aws_standard_network.subnet_private_ids[0]}"
 }
 
