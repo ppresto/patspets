@@ -1,16 +1,5 @@
 //--------------------------------------------------------------------
-// Module - AWS Instances
-module "ec2_instance" {
-  source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  version = "0.1.6"
-  name_prefix = "${var.name_prefix}"
-  count = 1
-  instance_type = "t2.micro"
-  securitygroup_id = "${data.terraform_remote_state.patrick_tf_aws_standard_network.webapp_security_group}"
-}
-
-//--------------------------------------------------------------------
-// AWS Network - Get Network Team's Existing VPC Data from their Workspace
+// Workspace Data
 data "terraform_remote_state" "patrick_tf_aws_standard_network" {
   backend = "atlas"
   config {
@@ -18,6 +7,20 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
     name    = "Patrick/tf-aws-standard-network"
   }
 }
+
+
+//--------------------------------------------------------------------
+// Modules
+module "ec2_instance" {
+  source  = "app.terraform.io/Patrick/ec2_instance/aws"
+  version = "0.1.6"
+  name_prefix = "${var.name_prefix}"
+  count = 1
+  instance_type = "t3.large"
+  securitygroup_id = "${data.terraform_remote_state.patrick_tf_aws_standard_network.webapp_security_group}"
+}
+
+
 
 //--------------------------------------------------------------------
 // OUTPUTS - For Useability

@@ -24,6 +24,9 @@ fi
 if [[ ! -z ${APP_TFE_TOKEN} && ! -z ${ATLAS_TOKEN} ]]; then
   ATLAS_TOKEN=${APP_TFE_TOKEN} 
 fi
+
+cd ../
+
 echo
 lblue "###########################################"
 lcyan "  CLI Workflow with Terraform Enterprise"
@@ -57,7 +60,7 @@ CONFIG
 
 echo
 cyan "Set TERRAFORM_CONFIG in your Environment"
-pe "export TERRAFORM_CONFIG=\"${DIR}/.terraformrc\""
+p "export TERRAFORM_CONFIG=\"${DIR}/.terraformrc\""
 echo 
 
 echo
@@ -69,8 +72,8 @@ cyan "Initialize the remote backend and download module dependencies"
 pe "terraform init"
 
 echo
-cyan "Running and example plan command"
-pe "terraform plan"
+cyan "Now Run your Terraform Commands"
+pe "terraform apply"
 
 # clean up sensitive files
-rm -rf ${DIR}/.terraform*
+rm -rf ${DIR}/../.terraform*
