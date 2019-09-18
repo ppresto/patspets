@@ -24,9 +24,7 @@ module "ec2_instance" {
 
 //--------------------------------------------------------------------
 // OUTPUTS - For Useability
-output "private_key_filename" {
-  value = "${module.ec2_instance.private_key_filename}"
-}
+
 output "private_key_pem" {
   value = "${module.ec2_instance.private_key_pem}"
 }
