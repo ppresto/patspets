@@ -114,7 +114,7 @@ pipeline {
                               --data-binary @"$UPLOAD_FILE_NAME" \
                               ${UPLOAD_URL}
                         '''
-                        notifySlack(""WORKSPACE ( ${TFE_WORKSPACE} ): New Content Uploaded\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTerraform Runs:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                        notifySlack("${TFE_WORKSPACE}: New Content Uploaded\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTerraform Runs:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
                   }
             }
             
