@@ -132,7 +132,7 @@ CONFIG
             stage('Clean Up') {
                   steps {
                         sh '''                                   
-                              rm -rf "${WORKSPACE}/.git*""
+                              rm -rf "${WORKSPACE}/.git*"
                         '''
                   }
             }
