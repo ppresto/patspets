@@ -49,7 +49,7 @@ pipeline {
             TFE_API_TOKEN = credentials("tfe_api_token")
             TFE_DIRECTORY = "tfe"
             UPLOAD_FILE_NAME = "./content.${TFE_WORKSPACE}.tar.gz"
-            TERRAFORM_CONFIG = "${WORKSPACE}/${TFE_DIRECTORY}/.terraformrc"
+            TERRAFORM_CONFIG = "${WORKSPACE}/../.terraformrc"
       }
 
       stages {
@@ -59,20 +59,20 @@ pipeline {
 
                         // List env vars for ref
                         setBuildStatus("Initializing Terraform", "Initializing");
-                        dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
+                        dir("${env.WORKSPACE}/../"){
                               sh '''
-                                    if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
+                                    if [[ ! -f terraform ]]; then curl -o ../../tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
                                     rm tf.zip
                                     env
-                                    git branch
-                                    git status
-                                    ./terraform version
+                                    export PATH=${WORKSPACE}/..:${PATH}
+                                    terraform version
 cat <<CONFIG | tee .terraformrc
 credentials "${TFE_NAME}" {
   token = "${TFE_API_TOKEN}"
 }
 CONFIG
-                                    ./terraform init
+                                    cd "${env.WORKSPACE}/${TFE_DIRECTORY}
+                                    terraform init
                               '''
                         }
                   }
