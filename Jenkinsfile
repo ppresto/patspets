@@ -62,6 +62,7 @@ pipeline {
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
                               sh '''
                                     if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
+                                    rm tf.zip
                                     env
                                     git branch
                                     git status
@@ -118,6 +119,7 @@ CONFIG
                   steps {
                         sh '''
                               rm "${WORKSPACE}/${TFE_DIRECTORY}/.terraformrc"
+                              rm "${WORKSPACE}/${TFE_DIRECTORY}/terraform"
                               git branch
                               git status
                         '''
