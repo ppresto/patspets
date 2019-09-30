@@ -1,6 +1,10 @@
 # Local .terraform directories
 **/.terraform/*
 
+# exclude terraform bin
+terraform
+tfe@tmp
+
 # .tfstate files
 *.tfstate
 *.tfstate.*

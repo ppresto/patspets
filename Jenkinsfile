@@ -32,7 +32,7 @@ def mergeThenPush(repo, toBranch) {
       sh "git config --global user.name \"Patrick Presto\""
       sh "git checkout ${toBranch}"
       sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
-      sh "git merge origin/${env.BRANCH_NAME} --no-ff --no-edit"
+      sh "git merge origin/${env.BRANCH_NAME} --no-ff"
       sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
   }
 }
@@ -49,48 +49,59 @@ pipeline {
             TFE_API_TOKEN = credentials("tfe_api_token")
             TFE_DIRECTORY = "tfe"
             UPLOAD_FILE_NAME = "./content.${TFE_WORKSPACE}.tar.gz"
-            TERRAFORM_CONFIG = "${WORKSPACE}/${TFE_DIRECTORY}/.terraformrc"
+            TMP_DIR = "${WORKSPACE}/.."
+            TERRAFORM_CONFIG = "${TMP_DIR}/.terraformrc"
+            PATH = "${TMP_DIR}:${PATH}"
+
       }
 
       stages {
+            stage ('git'){
+                  steps {
+                        checkout([$class: 'GitSCM', doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'LocalBranch', localBranch: "**"]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'github-ppresto', url: 'https://github.com/ppresto/patspets']]])
+                        }
+        }
+
             stage('initialize') {
                   steps {
                         notifySlack("${TFE_WORKSPACE} - Initializing Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
 
                         // List env vars for ref
                         setBuildStatus("Initializing Terraform", "Initializing");
-                        dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
+                        dir("${env.TMP_DIR}"){
                               sh '''
                                     if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
+                                    if [[ -f tf.zip ]]; then rm tf.zip; fi
                                     env
-                                    ./terraform version
+                                    terraform version
 cat <<CONFIG | tee .terraformrc
 credentials "${TFE_NAME}" {
   token = "${TFE_API_TOKEN}"
 }
 CONFIG
-                                    ./terraform init
+                                    cd "${WORKSPACE}/${TFE_DIRECTORY}"
+                                    git branch
+                                    git status
+                                    terraform init
+                                    git branch
+                                    git status
                               '''
                         }
                   }
             }
 
-            stage('Terraform Plan') {
+            stage('TF Plan') {
                   steps {
                         echo "Running terraform plan"
                   }
             }
-            stage('Sentinal Policy Check') {
-                  steps {
-                        echo "Checking Sentinel Policies"
-                  }
-            }
-            stage('Terraform Apply') {
+
+            stage('Run Sentinel Checks & Apply') {
                   steps {
                         setBuildStatus("Terraform Apply", "PENDING");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
                               sh '''                                   
-                                    ./terraform apply
+                                    terraform apply
                               '''
                         }
                         notifySlack("${TFE_WORKSPACE} - Terraform Apply - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
@@ -118,6 +129,10 @@ CONFIG
             }
             stage('Merge') {
                   steps {
+                        sh '''
+                              git branch
+                              git status
+                        '''
                         echo "Merging ${env.BRANCH_NAME} to master"
                         mergeThenPush("github.com/ppresto/patspets", "master")
                         notifySlack("${TFE_WORKSPACE} - PR Merged - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
@@ -127,7 +142,9 @@ CONFIG
             stage('Clean Up') {
                   steps {
                         sh '''                                   
-                              rm -rf ${WORKSPACE}/.git*
+                              rm -rf "${WORKSPACE}/.git*"
+                              rm "${TMP_DIR}/.terraformrc"
+                              rm "${TMP_DIR}/terraform"
                         '''
                   }
             }
