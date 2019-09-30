@@ -74,8 +74,11 @@ credentials "${TFE_NAME}" {
 }
 CONFIG
                                     cd "${WORKSPACE}/${TFE_DIRECTORY}"
-                                    terraform version
+                                    git branch
+                                    git status
                                     terraform init
+                                    git branch
+                                    git status
                               '''
                         }
                   }
@@ -92,7 +95,7 @@ CONFIG
                         setBuildStatus("Terraform Apply", "PENDING");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
                               sh '''                                   
-                                    ./terraform apply
+                                    terraform apply
                               '''
                         }
                         notifySlack("${TFE_WORKSPACE} - Terraform Apply - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
@@ -121,8 +124,6 @@ CONFIG
             stage('Merge') {
                   steps {
                         sh '''
-                              rm "${WORKSPACE}/${TFE_DIRECTORY}/.terraformrc"
-                              rm "${WORKSPACE}/${TFE_DIRECTORY}/terraform"
                               git branch
                               git status
                         '''
@@ -136,6 +137,8 @@ CONFIG
                   steps {
                         sh '''                                   
                               rm -rf "${WORKSPACE}/.git*"
+                              rm "${TMP_DIR}/.terraformrc"
+                              rm "${TMP_DIR}/terraform"
                         '''
                   }
             }
