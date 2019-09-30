@@ -56,11 +56,7 @@ pipeline {
       }
 
       stages {
-            stage ('git'){
-                  steps {
-                        checkout([$class: 'GitSCM', doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'LocalBranch', localBranch: "**"]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'github-ppresto', url: 'https://github.com/ppresto/patspets']]])
-                        }
-        }
+
 
             stage('initialize') {
                   steps {
