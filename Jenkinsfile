@@ -33,7 +33,7 @@ def mergeThenPush(repo, toBranch) {
       sh "git checkout ${toBranch}"
       sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
       sh "git merge origin/${env.BRANCH_NAME} --no-ff"
-      sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
+      sh "git push https://${gitUser}:${gitPass}@${repo} ${toBranch}"
   }
 }
 
@@ -56,8 +56,6 @@ pipeline {
       }
 
       stages {
-
-
             stage('initialize') {
                   steps {
                         notifySlack("${TFE_WORKSPACE} - Initializing Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
@@ -76,8 +74,6 @@ credentials "${TFE_NAME}" {
 }
 CONFIG
                                     cd "${WORKSPACE}/${TFE_DIRECTORY}"
-                                    git branch
-                                    git status
                                     terraform init
                                     git branch
                                     git status
