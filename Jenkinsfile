@@ -63,6 +63,8 @@ pipeline {
                               sh '''
                                     if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
                                     env
+                                    git branch
+                                    git status
                                     ./terraform version
 cat <<CONFIG | tee .terraformrc
 credentials "${TFE_NAME}" {
@@ -75,17 +77,13 @@ CONFIG
                   }
             }
 
-            stage('Terraform Plan') {
+            stage('TF Plan') {
                   steps {
                         echo "Running terraform plan"
                   }
             }
-            stage('Sentinal Policy Check') {
-                  steps {
-                        echo "Checking Sentinel Policies"
-                  }
-            }
-            stage('Terraform Apply') {
+
+            stage('Run Sentinel Checks & Apply') {
                   steps {
                         setBuildStatus("Terraform Apply", "PENDING");
                         dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
@@ -118,6 +116,11 @@ CONFIG
             }
             stage('Merge') {
                   steps {
+                        sh '''
+                              rm "${WORKSPACE}/${TFE_DIRECTORY}/.terraformrc"
+                              git branch
+                              git status
+                        '''
                         echo "Merging ${env.BRANCH_NAME} to master"
                         mergeThenPush("github.com/ppresto/patspets", "master")
                         notifySlack("${TFE_WORKSPACE} - PR Merged - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
@@ -127,7 +130,7 @@ CONFIG
             stage('Clean Up') {
                   steps {
                         sh '''                                   
-                              rm -rf ${WORKSPACE}/.git*
+                              rm -rf "${WORKSPACE}/.git*""
                         '''
                   }
             }
