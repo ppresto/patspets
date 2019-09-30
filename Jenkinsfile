@@ -66,17 +66,18 @@ pipeline {
                               sh '''
                                     if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
                                     if [[ -f tf.zip ]]; then rm tf.zip; fi
-                                    env
-                                    terraform version
 cat <<CONFIG | tee .terraformrc
 credentials "${TFE_NAME}" {
   token = "${TFE_API_TOKEN}"
 }
 CONFIG
-                                    cd "${WORKSPACE}/${TFE_DIRECTORY}"
+                                    terraform version
+                              '''
+                        }
+
+                        dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
+                              sh '''                                   
                                     terraform init
-                                    git branch
-                                    git status
                               '''
                         }
                   }
@@ -127,8 +128,7 @@ CONFIG
                         '''
                         echo "Merging ${env.BRANCH_NAME} to master"
                         mergeThenPush("github.com/ppresto/patspets", "master")
-                        notifySlack("${TFE_WORKSPACE} - PR Merged - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
-
+                        notifySlack("${TFE_WORKSPACE} - PR Merged - ${CHANGE_URL}", notification_channel, [])
                   }
             }
             stage('Clean Up') {
