@@ -73,7 +73,8 @@ credentials "${TFE_NAME}" {
   token = "${TFE_API_TOKEN}"
 }
 CONFIG
-                                    cd "${env.WORKSPACE}/${TFE_DIRECTORY}"
+                                    cd "${WORKSPACE}/${TFE_DIRECTORY}"
+                                    terraform version
                                     terraform init
                               '''
                         }
