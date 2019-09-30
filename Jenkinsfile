@@ -65,7 +65,7 @@ pipeline {
                         dir("${env.TMP_DIR}"){
                               sh '''
                                     if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
-                                    if [[ -f tf.zip ]]; then rm tf.zip;
+                                    if [[ -f tf.zip ]]; then rm tf.zip; fi
                                     env
                                     terraform version
 cat <<CONFIG | tee .terraformrc
