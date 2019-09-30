@@ -15,8 +15,8 @@ module "ec2_instance" {
   source  = "app.terraform.io/Patrick/ec2_instance/aws"
   version = "0.1.8"
   name_prefix = "${var.name_prefix}"
-  count =1
-  instance_type = "t3.large"
+  count =0
+  instance_type = "t2.micro"
   security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.security_group_web}"
 }
 
