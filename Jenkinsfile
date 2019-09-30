@@ -32,7 +32,7 @@ def mergeThenPush(repo, toBranch) {
       sh "git config --global user.name \"Patrick Presto\""
       sh "git checkout ${toBranch}"
       sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
-      sh "git merge origin/${env.BRANCH_NAME} --no-ff --no-edit"
+      sh "git merge origin/${env.BRANCH_NAME} --no-ff"
       sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
   }
 }
@@ -56,6 +56,18 @@ pipeline {
       }
 
       stages {
+            stage ('git'){
+                  steps {
+                        checkout([
+                              $class: 'GitSCM',
+                              branches: scm.branches,
+                              doGenerateSubmoduleConfigurations: false,
+                              extensions: scm.extensions + [[$class: 'SubmoduleOption', disableSubmodules: false, recursiveSubmodules: true, reference: '', trackingSubmodules: false]],
+                              submoduleCfg: [],
+                              userRemoteConfigs: scm.userRemoteConfigs])
+                        }
+        }
+
             stage('initialize') {
                   steps {
                         notifySlack("${TFE_WORKSPACE} - Initializing Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
