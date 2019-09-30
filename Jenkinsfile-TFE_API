@@ -32,8 +32,8 @@ def mergeThenPush(repo, toBranch) {
       sh "git config --global user.name \"Patrick Presto\""
       sh "git checkout ${toBranch}"
       sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
-      sh "git merge origin/${env.BRANCH_NAME} --no-ff --no-edit"
-      sh "git push https://${gitUser}:${gitPass}@${repo} origin/${toBranch}"
+      sh "git merge origin/${env.BRANCH_NAME} --no-ff"
+      sh "git push https://${gitUser}:${gitPass}@${repo} ${toBranch}"
   }
 }
 
