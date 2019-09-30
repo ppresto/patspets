@@ -2,8 +2,8 @@
 **/.terraform/*
 
 # exclude terraform bin
-terraform
-tfe@tmp
+#terraform
+#tfe@tmp
 
 # .tfstate files
 *.tfstate
