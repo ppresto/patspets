@@ -44,7 +44,7 @@ pipeline {
             TFE_NAME = "app.terraform.io"
             TFE_URL = "https://app.terraform.io"
             TFE_ORGANIZATION = "Patrick"
-            TFE_WORKSPACE = "patspets_master"
+            TFE_WORKSPACE = "patspets_stage"
             TFE_API_URL = "${TFE_URL}/api/v2"
             TFE_API_TOKEN = credentials("tfe_api_token")
             TFE_DIRECTORY = "tfe"
@@ -126,8 +126,8 @@ CONFIG
                               git branch
                               git status
                         '''
-                        echo "Merging ${env.BRANCH_NAME} to master"
-                        mergeThenPush("github.com/ppresto/patspets", "master")
+                        echo "Merging ${env.BRANCH_NAME} to stage"
+                        mergeThenPush("github.com/ppresto/patspets", "stage")
                         notifySlack("${TFE_WORKSPACE} - PR Merged - ${CHANGE_URL}", notification_channel, [])
                   }
             }
