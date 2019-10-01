@@ -44,7 +44,7 @@ pipeline {
             TFE_NAME = "app.terraform.io"
             TFE_URL = "https://app.terraform.io"
             TFE_ORGANIZATION = "Patrick"
-            TFE_WORKSPACE = "patspets_master"
+            TFE_WORKSPACE = "patspets_stage"
             TFE_API_URL = "${TFE_URL}/api/v2"
             TFE_API_TOKEN = credentials("tfe_api_token")
             TFE_DIRECTORY = "tfe"
@@ -56,7 +56,7 @@ pipeline {
       }
 
       stages {
-            stage('initialize') {
+            stage('Init') {
                   steps {
                         notifySlack("${TFE_WORKSPACE} - Initializing Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
 
@@ -83,7 +83,7 @@ CONFIG
                   }
             }
 
-            stage('TF Plan') {
+            stage('Plan') {
                   steps {
                         echo "Running terraform plan"
                   }
@@ -126,8 +126,8 @@ CONFIG
                               git branch
                               git status
                         '''
-                        echo "Merging ${env.BRANCH_NAME} to master"
-                        mergeThenPush("github.com/ppresto/patspets", "master")
+                        echo "Merging ${env.BRANCH_NAME} to stage"
+                        mergeThenPush("github.com/ppresto/patspets", "stage")
                         notifySlack("${TFE_WORKSPACE} - PR Merged - ${CHANGE_URL}", notification_channel, [])
                   }
             }
