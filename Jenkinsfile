@@ -56,7 +56,7 @@ pipeline {
       }
 
       stages {
-            stage('initialize') {
+            stage('Init') {
                   steps {
                         notifySlack("${TFE_WORKSPACE} - Initializing Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
 
@@ -83,7 +83,7 @@ CONFIG
                   }
             }
 
-            stage('TF Plan') {
+            stage('Plan') {
                   steps {
                         echo "Running terraform plan"
                   }
