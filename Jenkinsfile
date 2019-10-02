@@ -1,6 +1,5 @@
 import groovy.json.JsonOutput
 // Global Variables
-env.slack_url = 'https://hooks.slack.com/services/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'
 env.notification_channel = 'ppresto-alerts'
 
 //Slack - Send Slack Notifications at important stages of your pipeline
@@ -10,7 +9,9 @@ def notifySlack(text, channel, attachments) {
         username: "Jenkins",
         attachments: attachments
     ])
-    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+    withCredentials([usernamePassword(credentialsId: 'slack_webhook', passwordVariable: 'slack_url', usernameVariable: 'slack_channel')]) {
+      sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+    }
 }
 
 
@@ -148,6 +149,8 @@ CONFIG
             }
             failure {
                   setBuildStatus("Build Failed", "FAILURE");
+                  notifySlack("FAILED - ${TFE_WORKSPACE} - http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
+
             }
       }
 }
