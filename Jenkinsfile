@@ -12,7 +12,6 @@ def notifySlack(text, channel, attachments) {
     withCredentials([string(credentialId: 'slack_webhook', variable: 'slack_url')]){
       sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
     }
-    #sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
 }
 
 
