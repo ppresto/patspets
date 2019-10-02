@@ -9,7 +9,7 @@ def notifySlack(text, channel, attachments) {
         username: "Jenkins",
         attachments: attachments
     ])
-    withCredentials([string(credentialId: 'slack_webhook', variable: 'slack_url')]){
+    withCredentials([usernamePassword(credentialsId: 'slack_webhook', passwordVariable: 'slack_url', usernameVariable: 'slack_channel')]) {
       sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
     }
 }
