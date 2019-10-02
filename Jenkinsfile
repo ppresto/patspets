@@ -149,6 +149,8 @@ CONFIG
             }
             failure {
                   setBuildStatus("Build Failed", "FAILURE");
+                  notifySlack("FAILED - ${TFE_WORKSPACE} - http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
+
             }
       }
 }
