@@ -1,6 +1,5 @@
 import groovy.json.JsonOutput
 // Global Variables
-env.slack_url = 'https://hooks.slack.com/services/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'
 env.notification_channel = 'ppresto-alerts'
 
 //Slack - Send Slack Notifications at important stages of your pipeline
@@ -10,7 +9,10 @@ def notifySlack(text, channel, attachments) {
         username: "Jenkins",
         attachments: attachments
     ])
-    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+    withCredentials([string(credentialId: 'slack_webhook', variable: 'slack_url')]){
+      sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+    }
+    #sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
 }
 
 
