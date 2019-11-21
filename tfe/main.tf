@@ -13,11 +13,10 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
 // Modules
 module "ec2_instance" {
   source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  #version = "0.1.8"
   version = "2.0.5"
   name_prefix = "${var.name_prefix}"
   #count = 1
-  instance_type = "t2.micro"
+  instance_type = "t3.large"
   security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
 }
 
