@@ -1,26 +1,20 @@
 //--------------------------------------------------------------------
-// Workspace Data
-data "terraform_remote_state" "patrick_tf_aws_standard_network" {
-  backend = "atlas"
-  config {
-    address = "https://app.terraform.io"
-    name    = "Patrick/tf-aws-standard-network"
-  }
+// Modules
+module "aws_std_network" {
+  source  = "app.terraform.io/Patrick/aws_std_network/aws"
+  version = "0.2.4"
 }
 
-
-//--------------------------------------------------------------------
-// Modules
 module "ec2_instance" {
   source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  version = "0.1.8"
+  version = "2.0.7"
+
   name_prefix = "${var.name_prefix}"
-  count = 1
-  instance_type = "t3.large"
-  security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.security_group_web}"
+  instance_count = 5
+  instance_type = "t2.nano"
+  name_prefix = "test-network-presto"
+  security_group = "${module.aws_std_network.security_group_web}"
 }
-
-
 
 //--------------------------------------------------------------------
 // OUTPUTS - For Useability
