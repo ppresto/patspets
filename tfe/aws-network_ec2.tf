@@ -6,8 +6,10 @@ data "aws_security_group" "default" {
 }
 
 module "vpc" {
-  source  = "app.terraform.io/presto-workshop-tfc-aws/vpc/aws"
-  version = "2.21.0"
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "2.17.0"
+  //source  = "app.terraform.io/presto-workshop-tfc-aws/vpc/aws"
+  //version = "2.21.0"
 
   name = "presto-vpc"
   cidr = "10.0.0.0/16"
