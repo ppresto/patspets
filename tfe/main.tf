@@ -13,7 +13,7 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
 // Modules
 module "ec2_instance" {
   source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  version = "2.0.5"
+  version = "2.0.6"
   name_prefix = "${var.name_prefix}"
   instance_count = 5
   instance_type = "t2.nano"
