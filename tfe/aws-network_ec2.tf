@@ -1,6 +1,7 @@
 //--------------------------------------------------------------------
 // Modules
 module "aws_std_network" {
+  name = "${var.name_prefix}"
   source  = "app.terraform.io/Patrick/aws_std_network/aws"
   version = "0.2.4"
 }
@@ -12,7 +13,6 @@ module "ec2_instance" {
   name_prefix = "${var.name_prefix}"
   instance_count = 5
   instance_type = "t2.nano"
-  name_prefix = "test-network-presto"
   security_group = "${module.aws_std_network.security_group_web}"
 }
 
