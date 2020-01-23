@@ -17,6 +17,16 @@ variable "subnetid" {
   description = "Subnet ID (default = subnet_public_ids[0]"
   default = ""
 }
+variable "public" {
+  description = "Instance is accessibly from outside (default: true)"
+  default     = true
+}
+variable "instance_type" {
+  description = "Select Instance Size (default: t2.micro)"
+  type        = "string"
+  default     = "t2.micro"
+}
+
 //--------------------------------------------------------------------
 // Modules
 
@@ -89,7 +99,7 @@ resource "aws_instance" "main" {
   ami                         = "${data.aws_ami.ubuntu.id}"
   instance_type               = "${var.instance_type}"
   associate_public_ip_address = "${var.public}"
-  vpc_security_group_ids      = "${[var.security_group]}"
+  vpc_security_group_ids      = "${[aws_security_group.myapp.id]}"
   subnet_id                   = "${module.vpc.public_subnets[0]}"
   
   tags = {
