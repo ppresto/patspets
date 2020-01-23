@@ -22,6 +22,7 @@ module "myapp_sg" {
     {
       rule        = "postgresql-tcp"
       cidr_blocks = "10.10.0.0/16"
+      #cidr_blocks = "0.0.0.0/0"
     },
   ]
 }
@@ -43,7 +44,6 @@ module "vpc" {
   enable_vpn_gateway = true
 
   tags = {
-    Terraform = "true"
     Environment = "presto-dev"
   }
 }
@@ -53,18 +53,19 @@ module "ec2_cluster" {
   version                = "~> 2.0"
 
   name                   = "my-cluster"
-  instance_count         = 3
+  instance_count         = 5
 
   ami                    = "ami-04590e7389a6e577c"
-  instance_type          = "t2.micro"
+  instance_type          = "t2.large"
   key_name               = "ppresto-ptfe-dev-key"
   monitoring             = true
   vpc_security_group_ids = [module.myapp_sg.this_security_group_id]
   subnet_id              = module.vpc.public_subnets[0]
 
   tags = {
-    Terraform   = "true"
     Environment = "ppresto-dev"
+    #owner       = "uswest-se-ppresto"
+    #TTL         = 24
   }
 }
 
