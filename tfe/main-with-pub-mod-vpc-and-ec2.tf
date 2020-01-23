@@ -52,7 +52,7 @@ resource "aws_security_group" "myapp" {
   description = "Security Group for ${var.name_prefix} Web App"
   vpc_id      = "${module.vpc.default_vpc_id}"
 
-  tags = "${map("Name", format("%s-myapp", var.name_prefix))}"
+  #tags = "${map("Name", format("%s-myapp", var.name_prefix))}"
 
   ingress {
     # TLS (change to whatever ports you need)
