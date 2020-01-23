@@ -44,6 +44,38 @@ module "ec2_cluster" {
 
   tags = {
     Terraform   = "true"
-    Environment = "dev"
+    Environment = "ppresto-dev"
   }
+}
+
+output "vpc_id" {
+  value = "${module.vpc.default_vpc_id}"
+}
+
+output "public_subnets" {
+  value = "${module.vpc.public_subnets}"
+}
+
+output "default_security_group_id" {
+  value = "${module.vpc.default_security_group_id}"
+}
+
+output "availability_zone" {
+  value = "${module.ec2_cluster.availability_zone}"
+}
+
+output "ec2_ids" {
+  value = "${module.ec2_cluster.id}"
+}
+
+output "key_name" {
+  value = "${module.ec2_cluster.key_name}"
+}
+
+output "subnet_id" {
+  value = "${module.ec2_cluster.subnet_id}"
+}
+
+output "ec2_security_group_ids" {
+  value = "${module.ec2_cluster.vpc_security_group_ids}"
 }
