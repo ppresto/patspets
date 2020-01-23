@@ -13,7 +13,7 @@ module "myapp_sg" {
   description = "Security group for web-server with HTTP ports open within VPC"
   vpc_id      = module.vpc.vpc_id
 
-  ingress_cidr_blocks = ["10.0.0.0/16"]
+  ingress_cidr_blocks = ["0.0.0.0/0"]
 }
 
 module "vpc" {
@@ -49,7 +49,7 @@ module "ec2_cluster" {
   instance_type          = "t2.micro"
   key_name               = "ppresto-ptfe-dev-key"
   monitoring             = true
-  vpc_security_group_ids = [module.vpc.default_security_group_id]
+  vpc_security_group_ids = [module.myapp_sg.this_security_group_id]
   subnet_id              = module.vpc.public_subnets[0]
 
   tags = {
