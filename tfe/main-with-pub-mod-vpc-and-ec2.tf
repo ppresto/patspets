@@ -3,7 +3,7 @@
 variable "cidr_ingress" {
   description = "VPC CIDR blocks incoming traffic"
   type        = "list"
-  default     = ["0.0.0.0/0"]
+  default     = ["0.0.0.0/16"]
 }
 
 //--------------------------------------------------------------------
