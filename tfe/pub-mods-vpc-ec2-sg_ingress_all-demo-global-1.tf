@@ -21,15 +21,15 @@ module "myapp_sg" {
     },
     {
       rule        = "postgresql-tcp"
-      cidr_blocks = "10.10.0.0/16"
-      #cidr_blocks = "0.0.0.0/0"
+      #cidr_blocks = "10.10.0.0/16"
+      cidr_blocks = "0.0.0.0/0"
     },
   ]
 }
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "2.17.0"
+  version = "2.24.0"
   //source  = "app.terraform.io/presto-workshop-tfc-aws/vpc/aws"
   //version = "2.21.0"
 
