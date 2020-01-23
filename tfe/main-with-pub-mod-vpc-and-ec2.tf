@@ -8,10 +8,6 @@ variable "cidr_ingress" {
 
 //--------------------------------------------------------------------
 // Modules
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = module.vpc.vpc_id
-}
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -34,6 +30,11 @@ module "vpc" {
     Environment = "presto-dev"
   }
 }
+
+#data "aws_security_group" "default" {
+#  name   = "default"
+#  vpc_id = "${module.vpc.vpc_id}"
+#}
 
 resource "aws_security_group" "myapp" {
   name_prefix = "${var.name_prefix}-myapp-"
@@ -61,28 +62,14 @@ resource "aws_security_group_rule" "web-8080" {
   cidr_blocks       = "${var.cidr_ingress}"
 }
 
-
-//--------------------------------------------------------------------
-// Modules
 module "ec2_instance" {
   source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  // version = "2.0.6" - Use to verify policy: use-latest-module-version
   version = "2.0.7"
+
   name_prefix = "${var.name_prefix}"
   instance_count = 5
   instance_type = "t2.nano"
   security_group = "${aws_security_group.myapp.id}"
-  //security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
-}
-
-module "ec2_instance" {
-  source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  version = "2.0.7"
-
-  name_prefix = "${var.name_prefix}"
-  instance_count = 5
-  instance_type = "t2.nano"
-  security_group = "${module.vpc.default_security_group_id}"
 }
 
 //--------------------------------------------------------------------
