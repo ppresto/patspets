@@ -2,7 +2,7 @@
 // Modules
 data "aws_security_group" "default" {
   name   = "default"
-  vpc_id = module.vpc.vpc_id
+  vpc_id = "${module.vpc.vpc_id}"
 }
 
 module "vpc" {
@@ -45,10 +45,10 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "main" {
   count                       = 1
   ami                         = "${data.aws_ami.ubuntu.id}"
-  instance_type               = "${var.instance_type}"
-  associate_public_ip_address = "${var.public}"
-  vpc_security_group_ids      = "${[aws_security_group.myapp.id]}"
-  subnet_id                   = "${module.vpc.public_subnets[1]}"
+  instance_type               = "t2.micro"
+  associate_public_ip_address = true
+  vpc_security_group_ids      = "${[aws_security_group.default.id]}"
+  subnet_id                   = "${module.vpc.public_subnets[0]}"
   
   tags = {
     Name  = "${var.name_prefix}_${count.index+1}"
@@ -57,25 +57,5 @@ resource "aws_instance" "main" {
   }
 }
 
-module "ec2_instance" {
-  source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  version = "2.0.7"
-
-  name_prefix = "${var.name_prefix}"
-  instance_count = 5
-  instance_type = "t2.nano"
-  security_group = "${module.vpc.default_security_group_id}"
-}
-
 //--------------------------------------------------------------------
 // OUTPUTS - For Useability
-
-output "private_key_pem" {
-  value = "${module.ec2_instance.private_key_pem}"
-}
-output "my_nodes_public_ips" {
-  value = "${module.ec2_instance.my_nodes_public_ips}"
-}
-output "my_bastion_public_ips" {
-  value = "${module.ec2_instance.my_bastion_public_ips}"
-}
