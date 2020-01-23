@@ -69,6 +69,14 @@ resource "aws_security_group" "myapp" {
     cidr_blocks = "${var.cidr_ingress}"
   }
 
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
+    prefix_list_ids = ["pl-12c4e678"]
+  }
+
   tags = {
     Name = "allow_all"
   }
@@ -95,7 +103,7 @@ resource "aws_instance" "main" {
   instance_type               = "${var.instance_type}"
   associate_public_ip_address = "${var.public}"
   vpc_security_group_ids      = "${[aws_security_group.myapp.id]}"
-  subnet_id                   = "${module.vpc.public_subnets[0]}"
+  subnet_id                   = "${module.vpc.public_subnets}"
   
   tags = {
     Name  = "${var.name_prefix}_${count.index+1}"
