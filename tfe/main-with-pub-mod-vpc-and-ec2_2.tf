@@ -59,7 +59,7 @@ resource "aws_placement_group" "web" {
 }
 
 module "ec2" {
-  source = "../../"
+  source = "terraform-aws-modules/terraform-aws-ec2-instance"
 
   instance_count = 2
 
