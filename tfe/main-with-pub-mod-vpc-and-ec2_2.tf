@@ -1,10 +1,7 @@
 
 //--------------------------------------------------------------------
 // Modules
-data "aws_security_group" "default" {
-  name   = "default"
-  vpc_id = module.vpc.vpc_id
-}
+
 
 module "myapp_sg" {
   source = "terraform-aws-modules/security-group/aws//modules/http-80"
