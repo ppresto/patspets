@@ -37,7 +37,7 @@ module "ec2_cluster" {
 
   ami                    = "ami-04590e7389a6e577c"
   instance_type          = "t2.micro"
-  key_name               = "user1"
+  key_name               = "ppresto-ptfe-dev-key"
   monitoring             = true
   vpc_security_group_ids = [module.vpc.default_security_group_id]
   subnet_id              = module.vpc.public_subnets[0]
