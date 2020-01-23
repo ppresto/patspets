@@ -1,3 +1,7 @@
+provider "aws" {
+  region = "${var.region}"
+}
+
 //--------------------------------------------------------------------
 // Variables
 variable "cidr_ingress" {
@@ -5,7 +9,14 @@ variable "cidr_ingress" {
   type        = "list"
   default     = ["0.0.0.0/16"]
 }
-
+variable "instance_count" {
+  description = "Number of instances to build"
+  default = 1
+}
+variable "subnetid" {
+  description = "Subnet ID (default = subnet_public_ids[0]"
+  default = ""
+}
 //--------------------------------------------------------------------
 // Modules
 
@@ -39,48 +50,52 @@ module "vpc" {
 resource "aws_security_group" "myapp" {
   name_prefix = "${var.name_prefix}-myapp-"
   description = "Security Group for ${var.name_prefix} Web App"
-  vpc_id      = "${module.vpc.vpc_id}"
+  vpc_id      = "${module.vpc.default_vpc_id}"
 
   tags = "${map("Name", format("%s-myapp", var.name_prefix))}"
+
+  ingress {
+    # TLS (change to whatever ports you need)
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    # Please restrict your ingress to only necessary IPs and ports.
+    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
+    cidr_blocks = "${var.cidr_ingress}"
+  }
+
+  tags = {
+    Name = "allow_all"
+  }
 }
 
-resource "aws_security_group_rule" "egress_web" {
-  security_group_id = "${aws_security_group.myapp.id}"
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  cidr_blocks       = "${var.cidr_ingress}"
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
 }
 
-resource "aws_security_group_rule" "web-8080" {
-  security_group_id = "${aws_security_group.myapp.id}"
-  type              = "ingress"
-  protocol          = "tcp"
-  from_port         = 8080
-  to_port           = 8080
-  cidr_blocks       = "${var.cidr_ingress}"
-}
-
-module "ec2_instance" {
-  source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  version = "2.0.7"
-
-  name_prefix = "${var.name_prefix}"
-  instance_count = 5
-  instance_type = "t2.nano"
-  security_group = "${aws_security_group.myapp.id}"
-}
-
-//--------------------------------------------------------------------
-// OUTPUTS - For Useability
-
-output "private_key_pem" {
-  value = "${module.ec2_instance.private_key_pem}"
-}
-output "my_nodes_public_ips" {
-  value = "${module.ec2_instance.my_nodes_public_ips}"
-}
-output "my_bastion_public_ips" {
-  value = "${module.ec2_instance.my_bastion_public_ips}"
+resource "aws_instance" "main" {
+  count                       = "${var.instance_count != "" ? var.instance_count : 0}"
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = var.instance_type
+  key_name                    = data.terraform_remote_state.vpc.outputs.ssh_key_name
+  associate_public_ip_address = var.public
+  vpc_security_group_ids      = [var.security_group]
+  subnet_id                   = "${module.vpc.public_subnets[0]}"
+  
+  tags = {
+    Name  = "${var.name_prefix}_${count.index+1}"
+    owner = "ppresto@hashicorp.com"
+    TTL   = 24
+  }
 }
