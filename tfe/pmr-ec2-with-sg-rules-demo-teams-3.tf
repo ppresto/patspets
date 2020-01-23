@@ -8,12 +8,18 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
   }
 }
 
-variable "cidr_ingress" {
-  description = "VPC CIDR blocks incoming traffic"
-  type        = "list"
-  default     = ["0.0.0.0/0"]
+//--------------------------------------------------------------------
+// Modules
+module "ec2_instance" {
+  source  = "app.terraform.io/Patrick/ec2_instance/aws"
+  // version - Use 2.0.7 to pass policy: use-latest-module-version
+  version = "2.0.6"
+  name_prefix = "${var.name_prefix}"
+  instance_count = 5
+  instance_type = "t2.nano"
+  security_group = "${aws_security_group.myapp.id}"
+  //security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
 }
-
 
 resource "aws_security_group" "myapp" {
   name_prefix = "${var.name_prefix}-myapp-"
@@ -38,24 +44,14 @@ resource "aws_security_group_rule" "web-8080" {
   protocol          = "tcp"
   from_port         = 8080
   to_port           = 8080
-  cidr_blocks       = "${var.vpc_cidrs_public}"
+  cidr_blocks       = "${var.cidr_ingress}"
 }
 
-
-//--------------------------------------------------------------------
-// Modules
-module "ec2_instance" {
-  source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  // version = "2.0.6" - Use to verify policy: use-latest-module-version
-  version = "2.0.7"
-  name_prefix = "${var.name_prefix}"
-  instance_count = 5
-  instance_type = "t2.nano"
-  security_group = "${aws_security_group.myapp.id}"
-  //security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
+variable "cidr_ingress" {
+  description = "VPC CIDR blocks incoming traffic"
+  type        = "list"
+  default     = ["157.131.174.226/32"]
 }
-
-
 
 //--------------------------------------------------------------------
 // OUTPUTS - For Useability
