@@ -103,7 +103,7 @@ resource "aws_instance" "main" {
   instance_type               = "${var.instance_type}"
   associate_public_ip_address = "${var.public}"
   vpc_security_group_ids      = "${[aws_security_group.myapp.id]}"
-  subnet_id                   = "${module.vpc.public_subnets}"
+  subnet_id                   = "${module.vpc.public_subnets[1]}"
   
   tags = {
     Name  = "${var.name_prefix}_${count.index+1}"
