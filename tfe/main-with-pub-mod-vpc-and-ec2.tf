@@ -86,11 +86,10 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_instance" "main" {
   count                       = "${var.instance_count != "" ? var.instance_count : 0}"
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = var.instance_type
-  key_name                    = data.terraform_remote_state.vpc.outputs.ssh_key_name
-  associate_public_ip_address = var.public
-  vpc_security_group_ids      = [var.security_group]
+  ami                         = "${data.aws_ami.ubuntu.id}"
+  instance_type               = "${var.instance_type}"
+  associate_public_ip_address = "${var.public}"
+  vpc_security_group_ids      = "${[var.security_group]}"
   subnet_id                   = "${module.vpc.public_subnets[0]}"
   
   tags = {
