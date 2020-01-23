@@ -21,11 +21,6 @@ variable "public" {
   description = "Instance is accessibly from outside (default: true)"
   default     = true
 }
-variable "instance_type" {
-  description = "Select Instance Size (default: t2.micro)"
-  type        = "string"
-  default     = "t2.micro"
-}
 
 //--------------------------------------------------------------------
 // Modules
