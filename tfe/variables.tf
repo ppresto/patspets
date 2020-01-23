@@ -18,3 +18,15 @@ variable "ingress_cidr_block" {
   type        = "string"
   default     = "157.131.174.226/32"
 }
+
+variable "cidr_ingress" {
+  description = "VPC CIDR blocks incoming traffic"
+  type        = "list"
+  default     = ["0.0.0.0/0"]
+}
+
+variable "vpc_cidrs_public" {
+  description = "VPC CIDR blocks for public subnets, defaults to \"10.139.1.0/24\", \"10.139.2.0/24\", and \"10.139.3.0/24\"."
+  type        = "list"
+  default     = ["10.139.1.0/24", "10.139.2.0/24", "10.139.3.0/24",]
+}
