@@ -8,6 +8,13 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
   }
 }
 
+variable "cidr_ingress" {
+  description = "VPC CIDR blocks incoming traffic"
+  type        = "list"
+  default     = ["0.0.0.0/0"]
+}
+
+
 resource "aws_security_group" "myapp" {
   name_prefix = "${var.name_prefix}-myapp-"
   description = "Security Group for ${var.name_prefix} Web App"
