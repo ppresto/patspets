@@ -22,6 +22,7 @@ module "myapp_sg" {
     {
       rule        = "postgresql-tcp"
       cidr_blocks = "10.10.0.0/16"
+      #cidr_blocks = "0.0.0.0/0"
     },
   ]
 }
@@ -43,9 +44,7 @@ module "vpc" {
   enable_vpn_gateway = true
 
   tags = {
-    Terraform = "true"
-    owner       = "uswest-se-ppresto"
-    TTL         = 24
+    Environment = "presto-dev"
   }
 }
 
@@ -65,8 +64,8 @@ module "ec2_cluster" {
 
   tags = {
     Environment = "ppresto-dev"
-    owner       = "uswest-se-ppresto"
-    TTL         = 24
+    #owner       = "uswest-se-ppresto"
+    #TTL         = 24
   }
 }
 
