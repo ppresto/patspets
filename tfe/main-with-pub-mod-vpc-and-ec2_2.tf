@@ -6,6 +6,16 @@ data "aws_security_group" "default" {
   vpc_id = module.vpc.vpc_id
 }
 
+module "myapp_sg" {
+  source = "terraform-aws-modules/security-group/aws//modules/http-80"
+
+  name        = "web-server"
+  description = "Security group for web-server with HTTP ports open within VPC"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress_cidr_blocks = ["10.0.0.0/16"]
+}
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "2.17.0"
@@ -49,7 +59,7 @@ module "ec2_cluster" {
 }
 
 output "vpc_id" {
-  value = "${module.vpc.default_vpc_id}"
+  value = "${module.vpc.vpc_id}"
 }
 
 output "public_subnets" {
@@ -78,4 +88,8 @@ output "subnet_id" {
 
 output "ec2_security_group_ids" {
   value = "${module.ec2_cluster.vpc_security_group_ids}"
+}
+
+output "web_security_group_ids" {
+  value = "${module.myapp_sg.this_security_group_id}"
 }
