@@ -105,9 +105,6 @@ module "ec2_with_t3_unlimited" {
   associate_public_ip_address = true
 }
 
-
-
-
 output "ids" {
   description = "List of IDs of instances"
   value       = "${module.ec2.id}"
