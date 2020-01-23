@@ -1,24 +1,9 @@
-provider "aws" {
-  region = "${var.region}"
-}
-
-//--------------------------------------------------------------------
-// Variables
-variable "cidr_ingress" {
-  description = "VPC CIDR blocks incoming traffic"
-  type        = "list"
-  default     = ["0.0.0.0/16"]
-}
-variable "instance_count" {
-  description = "Number of instances to build"
-  default = 1
-}
-variable "subnetid" {
-  description = "Subnet ID (default = subnet_public_ids[0]"
-  default = ""
-}
 //--------------------------------------------------------------------
 // Modules
+data "aws_security_group" "default" {
+  name   = "default"
+  vpc_id = module.vpc.vpc_id
+}
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -42,59 +27,25 @@ module "vpc" {
   }
 }
 
-#data "aws_security_group" "default" {
-#  name   = "default"
-#  vpc_id = "${module.vpc.vpc_id}"
-#}
+module "ec2_instance" {
+  source  = "app.terraform.io/Patrick/ec2_instance/aws"
+  version = "2.0.7"
 
-resource "aws_security_group" "myapp" {
-  name_prefix = "${var.name_prefix}-myapp-"
-  description = "Security Group for ${var.name_prefix} Web App"
-  vpc_id      = "${module.vpc.default_vpc_id}"
-
-  #tags = "${map("Name", format("%s-myapp", var.name_prefix))}"
-
-  ingress {
-    # TLS (change to whatever ports you need)
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    # Please restrict your ingress to only necessary IPs and ports.
-    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
-    cidr_blocks = "${var.cidr_ingress}"
-  }
-
-  tags = {
-    Name = "allow_all"
-  }
+  name_prefix = "${var.name_prefix}"
+  instance_count = 5
+  instance_type = "t2.nano"
+  security_group = "${module.vpc.default_security_group_id}"
 }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners = ["099720109477"] # Canonical
+//--------------------------------------------------------------------
+// OUTPUTS - For Useability
 
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
+output "private_key_pem" {
+  value = "${module.ec2_instance.private_key_pem}"
 }
-
-resource "aws_instance" "main" {
-  count                       = "${var.instance_count != "" ? var.instance_count : 0}"
-  ami                         = "${data.aws_ami.ubuntu.id}"
-  instance_type               = "${var.instance_type}"
-  associate_public_ip_address = "${var.public}"
-  vpc_security_group_ids      = "${[var.security_group]}"
-  subnet_id                   = "${module.vpc.public_subnets[0]}"
-  
-  tags = {
-    Name  = "${var.name_prefix}_${count.index+1}"
-    owner = "ppresto@hashicorp.com"
-    TTL   = 24
-  }
+output "my_nodes_public_ips" {
+  value = "${module.ec2_instance.my_nodes_public_ips}"
+}
+output "my_bastion_public_ips" {
+  value = "${module.ec2_instance.my_bastion_public_ips}"
 }
