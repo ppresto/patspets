@@ -13,7 +13,7 @@ resource "aws_security_group" "myapp" {
   description = "Security Group for ${var.name_prefix} Web App"
   vpc_id      = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.vpc_id}"
 
-  tags = "${merge(var.tags, map("Name", format("%s-myapp", var.name_prefix)))}"
+  tags = "${map("Name", format("%s-myapp", var.name_prefix))}"
 }
 
 resource "aws_security_group_rule" "egress_web" {
