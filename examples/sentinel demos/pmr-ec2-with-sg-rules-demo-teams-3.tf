@@ -18,6 +18,11 @@ module "ec2_instance" {
   instance_count = 5
   instance_type = "t2.nano"
   security_group = "${aws_security_group.myapp.id}"
+  tags = {
+    Environment = "dev"
+    owner       = "uswest-se-ppresto"
+    TTL         = 24
+  }
   //security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
 }
 
