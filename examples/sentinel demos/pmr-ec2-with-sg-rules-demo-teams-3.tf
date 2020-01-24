@@ -12,18 +12,18 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
 // Modules
 module "ec2_instance" {
   source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  // version - Use 2.0.7 to pass policy: use-latest-module-version
-  version = "2.0.6"
+  // version - Change version to pass policy: use-latest-module-version
+  version = "2.0.8"
   name_prefix = "${var.name_prefix}"
   instance_count = 5
-  instance_type = "t2.nano"
+  instance_type = "t2.large"
   security_group = "${aws_security_group.myapp.id}"
+  //security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
   tags = {
     Environment = "dev"
-    owner       = "uswest-se-ppresto"
-    TTL         = 24
+    #owner       = "uswest-se-ppresto"
+    #TTL         = 24
   }
-  //security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
 }
 
 resource "aws_security_group" "myapp" {
@@ -40,7 +40,7 @@ resource "aws_security_group_rule" "egress_web" {
   protocol          = "-1"
   from_port         = 0
   to_port           = 0
-  cidr_blocks       = "${var.cidr_ingress}"
+  cidr_blocks       = var.cidr_ingress
 }
 
 resource "aws_security_group_rule" "web-8080" {
@@ -49,13 +49,14 @@ resource "aws_security_group_rule" "web-8080" {
   protocol          = "tcp"
   from_port         = 8080
   to_port           = 8080
-  cidr_blocks       = "${var.cidr_ingress}"
+  cidr_blocks       = var.cidr_ingress
 }
 
 variable "cidr_ingress" {
   description = "VPC CIDR blocks incoming traffic"
   type        = "list"
-  default     = ["157.131.174.226/32"]
+  default     = ["0.0.0.0/0"]
+  #default     = ["157.131.174.226/32"]
 }
 
 //--------------------------------------------------------------------
