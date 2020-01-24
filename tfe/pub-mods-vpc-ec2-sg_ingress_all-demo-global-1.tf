@@ -56,7 +56,7 @@ module "ec2_cluster" {
   instance_count         = 5
 
   ami                    = "ami-04590e7389a6e577c"
-  instance_type          = "t2.nano"
+  instance_type          = "t2.large"
   key_name               = "ppresto-ptfe-dev-key"
   monitoring             = true
   vpc_security_group_ids = [module.myapp_sg.this_security_group_id]
@@ -64,8 +64,8 @@ module "ec2_cluster" {
 
   tags = {
     Environment = "ppresto-dev"
-    owner       = "uswest-se-ppresto"
-    TTL         = 24
+    #owner       = "uswest-se-ppresto"
+    #TTL         = 24
   }
 }
 
