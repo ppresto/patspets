@@ -13,7 +13,7 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
 module "ec2_instance" {
   source  = "app.terraform.io/Patrick/ec2_instance/aws"
   // version - Use 2.0.8 to pass policy: use-latest-module-version
-  version = "2.0.7"
+  version = "2.0.8"
   name_prefix = "${var.name_prefix}"
   instance_count = 5
   instance_type = "t2.large"
