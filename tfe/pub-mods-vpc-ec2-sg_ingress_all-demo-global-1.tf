@@ -64,8 +64,8 @@ module "ec2_cluster" {
 
   tags = {
     Environment = "ppresto-dev"
-    #owner       = "uswest-se-ppresto"
-    #TTL         = 24
+    owner       = "uswest-se-ppresto"
+    TTL         = 24
   }
 }
 
