@@ -25,38 +25,6 @@ module "ec2_instance" {
   }
 }
 
-resource "aws_security_group" "myapp" {
-  name_prefix = "${var.name_prefix}-myapp-"
-  description = "Security Group for ${var.name_prefix} Web App"
-  vpc_id      = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.vpc_id}"
-
-  tags = "${map("Name", format("%s-myapp", var.name_prefix))}"
-}
-
-resource "aws_security_group_rule" "egress_web" {
-  security_group_id = "${aws_security_group.myapp.id}"
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  cidr_blocks       = var.cidr_ingress
-}
-
-resource "aws_security_group_rule" "web-8080" {
-  security_group_id = "${aws_security_group.myapp.id}"
-  type              = "ingress"
-  protocol          = "tcp"
-  from_port         = 8080
-  to_port           = 8080
-  cidr_blocks       = var.cidr_ingress
-}
-
-variable "cidr_ingress" {
-  description = "VPC CIDR blocks incoming traffic"
-  type        = "list"
-  default     = ["157.131.174.226/32"]
-}
-
 //--------------------------------------------------------------------
 // OUTPUTS - For Useability
 
