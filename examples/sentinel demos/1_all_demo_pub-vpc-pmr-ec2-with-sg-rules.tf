@@ -50,7 +50,7 @@ module "ec2_cluster" {
   version                = "~> 2.0"
 
   name                   = "my-cluster"
-  instance_count         = 5
+  instance_count         = 10
 
   ami                    = "ami-04590e7389a6e577c"
   instance_type          = "t2.large"
@@ -61,6 +61,8 @@ module "ec2_cluster" {
 
   tags = {
     Environment = "ppresto-dev"
+    #owner       = "uswest-se-ppresto"
+    #TTL         = 24
   }
 }
 
@@ -85,11 +87,11 @@ module "ec2_instance" {
   //security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
 
   instance_count = 5
-  instance_type = "t2.large"
+  instance_type = "t2.nano"
     tags = {
     Environment = "dev"
-    #owner       = "uswest-se-ppresto"
-    #TTL         = 24
+    owner       = "uswest-se-ppresto"
+    TTL         = 24
   }
 }
 
