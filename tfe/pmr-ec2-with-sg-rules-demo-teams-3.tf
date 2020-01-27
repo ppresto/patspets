@@ -121,8 +121,7 @@ resource "aws_security_group_rule" "web-8080" {
 variable "cidr_ingress" {
   description = "VPC CIDR blocks incoming traffic"
   type        = "list"
-  default     = ["0.0.0.0/0"]
-  #default     = ["157.131.174.226/32"]
+  default     = ["157.131.174.226/32"]
 }
 
 //--------------------------------------------------------------------
