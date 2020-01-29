@@ -1,69 +1,3 @@
-
-module "myapp_sg" {
-  source = "terraform-aws-modules/security-group/aws"
-
-  name        = "myapp-service"
-  description = "Security group for myapp-service with my custom ports open within VPC, and PostgreSQL publicly open"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress_cidr_blocks      = ["10.10.0.0/16"]
-  ingress_rules            = ["https-443-tcp"]
-  ingress_with_cidr_blocks = [
-    {
-      from_port   = 8080
-      to_port     = 8090
-      protocol    = "tcp"
-      description = "myapp-service ports"
-      cidr_blocks = "10.10.0.0/16"
-    },
-    {
-      rule        = "postgresql-tcp"
-      cidr_blocks = "0.0.0.0/0"
-    },
-  ]
-}
-
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "2.17.0"
-  //source  = "app.terraform.io/presto-workshop-tfc-aws/vpc/aws"
-  //version = "2.21.0"
-
-  name = "presto-vpc"
-  cidr = "10.10.0.0/16"
-
-  azs             = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  private_subnets = ["10.10.1.0/24", "10.10.2.0/24", "10.10.3.0/24"]
-  public_subnets  = ["10.10.101.0/24", "10.10.102.0/24", "10.10.103.0/24"]
-
-  enable_nat_gateway = true
-  enable_vpn_gateway = true
-
-  tags = {
-    Environment = "presto-dev"
-  }
-}
-
-
-module "ec2_cluster" {
-  source                 = "terraform-aws-modules/ec2-instance/aws"
-  version                = "~> 2.0"
-
-  name                   = "my-cluster"
-  instance_count         = 5
-
-  ami                    = "ami-04590e7389a6e577c"
-  instance_type          = "t2.large"
-  key_name               = "ppresto-ptfe-dev-key"
-  monitoring             = true
-  vpc_security_group_ids = [module.myapp_sg.this_security_group_id]
-  subnet_id              = module.vpc.public_subnets[0]
-
-  tags = {
-    Environment = "ppresto-dev"
-  }
-}
-
 //--------------------------------------------------------------------
 // Workspace Data
 data "terraform_remote_state" "patrick_tf_aws_standard_network" {
@@ -85,11 +19,11 @@ module "ec2_instance" {
   //security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
 
   instance_count = 5
-  instance_type = "t2.large"
+  instance_type = "t2.nano"
     tags = {
     Environment = "dev"
-    #owner       = "uswest-se-ppresto"
-    #TTL         = 24
+    owner       = "uswest-se-ppresto"
+    TTL         = 24
   }
 }
 
