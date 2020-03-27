@@ -4,21 +4,14 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
   backend = "atlas"
   config  = {
     address = "https://app.terraform.io"
-    name    = "${var.organization}/tf-aws-standard-network"
-    #name    = "Patrick/tf-aws-standard-network"
+    name    = "Patrick/tf-aws-standard-network"
   }
-}
-
-locals {
-  # Use a standard naming convention to map Workspaces to Teams
-  url = "app.terraform.io/${var.organization}/ec2_instance/aws"
 }
 
 //--------------------------------------------------------------------
 // Modules
 module "ec2_instance" {
-  #source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  source  = "${local.url}"
+  source  = "app.terraform.io/Patrick/ec2_instance/aws"
 
   // version - Use 2.0.6/2.0.7 to test policy: use-latest-module-version
   version = "2.0.8"
