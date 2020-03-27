@@ -14,6 +14,7 @@ module "ec2_instance" {
   source  = "app.terraform.io/presto-projects/ec2-instance/aws"
   // version - Use 2.0.6/2.0.7 to test policy: use-latest-module-version
   version = "2.0.8"
+  tfe_org = "presto-projects"
   name_prefix = "${var.name_prefix}"
   instance_count = 5
   instance_type = "t2.nano"
