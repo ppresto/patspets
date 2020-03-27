@@ -19,6 +19,10 @@ module "ec2_instance" {
   instance_count = 5
   instance_type = "t2.nano"
   security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
+  tags = {
+    TTL = 6
+    owner = "presto"
+  }
 }
 
 
