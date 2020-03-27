@@ -1,10 +1,10 @@
 //--------------------------------------------------------------------
 // Workspace Data
-data "terraform_remote_state" "patrick_aws_standard_network" {
+data "terraform_remote_state" "presto_projects_aws_std_network" {
   backend = "atlas"
-  config  = {
-    address = "https://app.terraform.io"
-    name    = "presto-projects/aws-standard-network"
+  config {
+    address = "app.terraform.io"
+    name    = "presto-projects/aws-std-network"
   }
 }
 
@@ -17,7 +17,7 @@ module "ec2_instance" {
   name_prefix = "${var.name_prefix}"
   instance_count = 5
   instance_type = "t2.nano"
-  security_group = "${data.terraform_remote_state.patrick_aws_standard_network.outputs.security_group_web}"
+  security_group = "${data.terraform_remote_state.presto_projects_aws_std_network.security_group_web}"
   tags = {
     Environment = "dev"
     owner       = "uswest-se-ppresto"
