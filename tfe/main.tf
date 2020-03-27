@@ -17,7 +17,7 @@ module "ec2_instance" {
   name_prefix = "${var.name_prefix}"
   instance_count = 5
   instance_type = "t2.nano"
-  security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
+  security_group = "${data.terraform_remote_state.patrick_aws_standard_network.outputs.security_group_web}"
   tags = {
     Environment = "dev"
     owner       = "uswest-se-ppresto"
