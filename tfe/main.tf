@@ -1,18 +1,17 @@
 //--------------------------------------------------------------------
 // Workspace Data
-data "terraform_remote_state" "patrick_tf_aws_standard_network" {
+data "terraform_remote_state" "patrick_aws_standard_network" {
   backend = "atlas"
   config  = {
     address = "https://app.terraform.io"
-    name    = "presto-projects/tf-aws-standard-network"
+    name    = "presto-projects/aws-standard-network"
   }
 }
 
 //--------------------------------------------------------------------
 // Modules
 module "ec2_instance" {
-  source  = "app.terraform.io/presto-projects/ec2_instance/aws"
-
+  source  = "app.terraform.io/presto-projects/ec2-instance/aws"
   // version - Use 2.0.6/2.0.7 to test policy: use-latest-module-version
   version = "2.0.8"
   name_prefix = "${var.name_prefix}"
