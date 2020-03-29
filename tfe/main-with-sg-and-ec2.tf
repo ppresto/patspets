@@ -22,7 +22,7 @@ resource "aws_security_group_rule" "egress_web" {
   protocol          = "-1"
   from_port         = 0
   to_port           = 0
-  cidr_blocks       = "${var.cidr_ingress}"
+  cidr_blocks       = "${var.cidr_egress}"
 }
 
 resource "aws_security_group_rule" "web-8080" {
