@@ -25,4 +25,8 @@ variable "vpc_cidrs_public" {
   default     = ["10.139.1.0/24", "10.139.2.0/24", "10.139.3.0/24",]
 }
 
+variable "cidr_ingress" {
+    default     = "0.0.0.0/0"
+}
+
 variable "organization" {}
