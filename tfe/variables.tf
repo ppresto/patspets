@@ -26,7 +26,8 @@ variable "vpc_cidrs_public" {
 }
 
 variable "cidr_ingress" {
-    default     = "0.0.0.0/0"
+  type        = list
+  default     = ["0.0.0.0/0",]
 }
 
 variable "organization" {}
