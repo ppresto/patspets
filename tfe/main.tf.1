@@ -4,7 +4,7 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
   backend = "atlas"
   config  = {
     address = "https://app.terraform.io"
-    name    = "Patrick/tf-aws-standard-network"
+    name    = "${var.organization}/tf-aws-standard-network"
   }
 }
 
