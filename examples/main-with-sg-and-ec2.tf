@@ -22,7 +22,7 @@ resource "aws_security_group_rule" "egress_web" {
   protocol          = "-1"
   from_port         = 0
   to_port           = 0
-  cidr_blocks       = "${var.cidr_ingress}"
+  cidr_blocks       = "${var.cidr_egress}"
 }
 
 resource "aws_security_group_rule" "web-8080" {
@@ -40,7 +40,7 @@ resource "aws_security_group_rule" "web-8080" {
 module "ec2_instance" {
   source  = "app.terraform.io/Patrick/ec2_instance/aws"
   // version = "2.0.6" - Use to verify policy: use-latest-module-version
-  version = "2.0.7"
+  version = "2.0.8"
   name_prefix = "${var.name_prefix}"
   instance_count = 5
   instance_type = "t2.nano"
