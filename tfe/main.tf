@@ -15,8 +15,8 @@ module "ec2_instance" {
   // version = "2.0.7" - Use to verify policy: use-latest-module-version
   version = "2.0.8"
   name_prefix = "${var.name_prefix}"
-  instance_count = 2
-  instance_type = "t2.large"
+  instance_count = 3
+  instance_type = "t2.micro"
   security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
   tags = {
     TTL = 7
