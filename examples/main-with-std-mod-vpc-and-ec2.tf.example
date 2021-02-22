@@ -11,7 +11,7 @@ module "ec2_instance" {
 
   name_prefix = "${var.name_prefix}"
   instance_count = 5
-  instance_type = "t2.nano"
+  instance_type = "t2.large"
   name_prefix = "test-network-presto"
   security_group = "${module.aws_std_network.security_group_web}"
 }
