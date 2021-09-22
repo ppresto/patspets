@@ -21,19 +21,6 @@ module "ec2_instance" {
   name_prefix = var.prefix
   tags = var.tags
   instance_count = 3
-  instance_type = "t2.large"
+  instance_type = "t2.nano"
   security_group = data.terraform_remote_state.vpc.outputs.security_group_web
-}
-
-
-
-//--------------------------------------------------------------------
-// OUTPUTS - For Useability
-
-output "private_key_pem" {
-  value = "${module.ec2_instance.private_key_pem}"
-  sensitive = true
-}
-output "my_nodes_public_ips" {
-  value = "${module.ec2_instance.my_nodes_public_ips}"
 }
