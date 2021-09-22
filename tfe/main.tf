@@ -1,10 +1,13 @@
 //--------------------------------------------------------------------
 // Workspace Data
 data "terraform_remote_state" "vpc" {
-  backend = "atlas"
+  backend = "remote"
   config  = {
-    address = "https://app.terraform.io"
-    name    = "${var.organization}/tf-aws-standard-network"
+    hostname = "app.terraform.io"
+    organization = var.organization
+    workspaces = {
+      name    = "tf-aws-standard-network"
+    }
   }
 }
 
@@ -32,6 +35,7 @@ module "ec2_instance" {
 
 output "private_key_pem" {
   value = "${module.ec2_instance.private_key_pem}"
+  sensitive = true
 }
 output "my_nodes_public_ips" {
   value = "${module.ec2_instance.my_nodes_public_ips}"
