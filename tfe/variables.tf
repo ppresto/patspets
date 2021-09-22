@@ -22,7 +22,7 @@ variable "ingress_cidr_block" {
 variable "vpc_cidrs_public" {
   description = "VPC CIDR blocks for public subnets, defaults to \"10.139.1.0/24\", \"10.139.2.0/24\", and \"10.139.3.0/24\"."
   type        = list
-  default     = ["10.139.1.0/24", "10.139.2.0/24", "10.139.3.0/24",]
+  default     = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 }
 
 variable "cidr_egress" {
