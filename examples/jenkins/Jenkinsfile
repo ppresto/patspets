@@ -1,6 +1,5 @@
 import groovy.json.JsonOutput
 // Global Variables
-env.slack_url = 'https://hooks.slack.com/services/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'
 env.notification_channel = 'ppresto-alerts'
 
 //Slack - Send Slack Notifications at important stages of your pipeline
@@ -10,7 +9,9 @@ def notifySlack(text, channel, attachments) {
         username: "Jenkins",
         attachments: attachments
     ])
-    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+    withCredentials([usernamePassword(credentialsId: 'slack_webhook', passwordVariable: 'slack_url', usernameVariable: 'slack_channel')]) {
+      sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+    }
 }
 
 
@@ -44,7 +45,7 @@ pipeline {
             TFE_NAME = "app.terraform.io"
             TFE_URL = "https://app.terraform.io"
             TFE_ORGANIZATION = "Patrick"
-            TFE_WORKSPACE = "patspets_master"
+            TFE_WORKSPACE = "patspets_stage"
             TFE_API_URL = "${TFE_URL}/api/v2"
             TFE_API_TOKEN = credentials("tfe_api_token")
             TFE_DIRECTORY = "tfe"
@@ -56,7 +57,7 @@ pipeline {
       }
 
       stages {
-            stage('initialize') {
+            stage('Init') {
                   steps {
                         notifySlack("${TFE_WORKSPACE} - Initializing Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
 
@@ -83,7 +84,7 @@ CONFIG
                   }
             }
 
-            stage('TF Plan') {
+            stage('Plan') {
                   steps {
                         echo "Running terraform plan"
                   }
@@ -126,8 +127,8 @@ CONFIG
                               git branch
                               git status
                         '''
-                        echo "Merging ${env.BRANCH_NAME} to master"
-                        mergeThenPush("github.com/ppresto/patspets", "master")
+                        echo "Merging ${env.BRANCH_NAME} to stage"
+                        mergeThenPush("github.com/ppresto/patspets", "stage")
                         notifySlack("${TFE_WORKSPACE} - PR Merged - ${CHANGE_URL}", notification_channel, [])
                   }
             }
@@ -148,6 +149,8 @@ CONFIG
             }
             failure {
                   setBuildStatus("Build Failed", "FAILURE");
+                  notifySlack("FAILED - ${TFE_WORKSPACE} - http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
+
             }
       }
 }

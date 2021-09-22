@@ -1,6 +1,5 @@
 import groovy.json.JsonOutput
 // Global Variables
-env.slack_url = 'https://hooks.slack.com/services/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'
 env.notification_channel = 'ppresto-alerts'
 
 //Slack - Send Slack Notifications at important stages of your pipeline
@@ -10,7 +9,9 @@ def notifySlack(text, channel, attachments) {
         username: "Jenkins",
         attachments: attachments
     ])
-    sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+    withCredentials([usernamePassword(credentialsId: 'slack_webhook', passwordVariable: 'slack_url', usernameVariable: 'slack_channel')]) {
+      sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+    }
 }
 
 
@@ -44,80 +45,63 @@ pipeline {
             TFE_NAME = "app.terraform.io"
             TFE_URL = "https://app.terraform.io"
             TFE_ORGANIZATION = "Patrick"
-            TFE_WORKSPACE = "patspets_master"
+            TFE_WORKSPACE = "patspets_stage"
             TFE_API_URL = "${TFE_URL}/api/v2"
             TFE_API_TOKEN = credentials("tfe_api_token")
             TFE_DIRECTORY = "tfe"
             UPLOAD_FILE_NAME = "./content.${TFE_WORKSPACE}.tar.gz"
-            
+            TMP_DIR = "${WORKSPACE}/.."
+            TERRAFORM_CONFIG = "${TMP_DIR}/.terraformrc"
+            PATH = "${TMP_DIR}:${PATH}"
+
       }
 
       stages {
-            stage('Create TFE Content') {
+            stage('Init') {
                   steps {
+                        notifySlack("${TFE_WORKSPACE} - Initializing Job http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
+
                         // List env vars for ref
-                        echo sh(returnStdout: true, script: 'env')
-                        sh '''
-                              tar -C "$TFE_DIRECTORY" -zcvf "$UPLOAD_FILE_NAME" .
-                        '''
-                  }
-            }
-            stage('List TFE Workspaces') {
-                  steps {
-                  sh '''
-                        curl \
-                        --silent --show-error --fail \
-                        --header "Authorization: Bearer $TFE_API_TOKEN" \
-                        --header "Content-Type: application/vnd.api+json" \
-                        ${TFE_API_URL}/organizations/${TFE_ORGANIZATION}/workspaces \
-                        | jq -r \'.data[] | .attributes.name\'
-                  '''
-                  }
-            }
-            stage('Get Workspace ID') {
-                  steps {
-                        script {
-                              env.WORKSPACE_ID = sh(returnStdout: true, script: 'curl \
-                              --header "Authorization: Bearer $TFE_API_TOKEN" \
-                              --header "Content-Type: application/vnd.api+json" \
-                              ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
-                              | jq -r ".data.id"').trim()
+                        setBuildStatus("Initializing Terraform", "Initializing");
+                        dir("${env.TMP_DIR}"){
+                              sh '''
+                                    if [[ ! -f terraform ]]; then curl -o tf.zip https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip ; yes | unzip tf.zip; fi
+                                    if [[ -f tf.zip ]]; then rm tf.zip; fi
+cat <<CONFIG | tee .terraformrc
+credentials "${TFE_NAME}" {
+  token = "${TFE_API_TOKEN}"
+}
+CONFIG
+                                    terraform version
+                              '''
+                        }
+
+                        dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
+                              sh '''                                   
+                                    terraform init
+                              '''
                         }
                   }
             }
-            stage('Create New Config Version') {
+
+            stage('Plan') {
                   steps {
-                        setBuildStatus("Creating New Config Version", "PENDING");
-                        echo "WORKSPACE_ID: ${WORKSPACE_ID}"                           
-                        sh '''
-                              echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
-                        '''
-                        script {
-                              env.UPLOAD_URL = sh(returnStdout: true, script: 'curl \
-                              --header "Authorization: Bearer $TFE_API_TOKEN" \
-                              --header "Content-Type: application/vnd.api+json" \
-                              --request POST \
-                              --data @create_config_version.json \
-                              ${TFE_API_URL}/workspaces/$WORKSPACE_ID/configuration-versions \
-                              | jq -r \'.data.attributes."upload-url"\'').trim()
+                        echo "Running terraform plan"
+                  }
+            }
+
+            stage('Run Sentinel Checks & Apply') {
+                  steps {
+                        setBuildStatus("Terraform Apply", "PENDING");
+                        dir("${env.WORKSPACE}/${env.TFE_DIRECTORY}"){
+                              sh '''                                   
+                                    terraform apply
+                              '''
                         }
-                  }
+                        notifySlack("${TFE_WORKSPACE} - Terraform Apply - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                  }        
             }
-            stage('Upload New Workspace Content') {
-                  steps {
-                        setBuildStatus("Uploading Content to ${UPLOAD_URL}", "PENDING");
-                        echo "URL: ${UPLOAD_URL}"
-                        sh '''
-                              curl \
-                              --header "Content-Type: application/octet-stream" \
-                              --request PUT \
-                              --data-binary @"$UPLOAD_FILE_NAME" \
-                              ${UPLOAD_URL}
-                        '''
-                        notifySlack("${TFE_WORKSPACE}: New Content Uploaded\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTerraform Runs:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
-                  }
-            }
-            
+
             stage('Post Validation') {
                   parallel { 
                         stage('Integration Tests') {
@@ -139,28 +123,34 @@ pipeline {
             }
             stage('Merge') {
                   steps {
-                        echo "Merging ${env.BRANCH_NAME} to master"
-                        mergeThenPush("github.com/ppresto/patspets", "master")
-                        notifySlack("${TFE_WORKSPACE} - PR Merged - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
-
+                        sh '''
+                              git branch
+                              git status
+                        '''
+                        echo "Merging ${env.BRANCH_NAME} to stage"
+                        mergeThenPush("github.com/ppresto/patspets", "stage")
+                        notifySlack("${TFE_WORKSPACE} - PR Merged - ${CHANGE_URL}", notification_channel, [])
                   }
             }
             stage('Clean Up') {
                   steps {
                         sh '''                                   
-                              rm -rf ${WORKSPACE}/.git*
+                              rm -rf "${WORKSPACE}/.git*"
+                              rm "${TMP_DIR}/.terraformrc"
+                              rm "${TMP_DIR}/terraform"
                         '''
                   }
             }
       }
 
       post {
-    success {
-        setBuildStatus("Build Succeeded", "SUCCESS");
-    }
-    failure {
-        setBuildStatus("Build Failed", "FAILURE");
-    }
-  }
+            success {
+                  setBuildStatus("Build Succeeded", "SUCCESS");
+            }
+            failure {
+                  setBuildStatus("Build Failed", "FAILURE");
+                  notifySlack("FAILED - ${TFE_WORKSPACE} - http://localhost:8080/job/cicd/job/patspets/view/change-requests/job/${env.BRANCH_NAME}/$BUILD_NUMBER/console", notification_channel, [])
 
+            }
+      }
 }
