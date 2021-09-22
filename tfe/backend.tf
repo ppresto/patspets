@@ -1,10 +1,10 @@
 terraform {
-    backend "remote" {
-        hostname = "app.terraform.io"
-        organization = "Patrick"
+  backend "remote" {
+    hostname     = "app.terraform.io"
+    organization = "Patrick"
 
-        workspaces {
-            name = "patspets_stage"
-        }
+    workspaces {
+      name = "patspets_stage"
     }
+  }
 }
