@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - stage
+      - master
   pull_request:
     branches:
       - stage
+      - master
 
 jobs:
   terraform:
