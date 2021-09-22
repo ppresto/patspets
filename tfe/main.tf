@@ -22,6 +22,6 @@ module "ec2_instance" {
   instance_count = 3
   instance_type  = "t2.large"
   security_group = data.terraform_remote_state.vpc.outputs.security_group_web
-  //tags           = var.tags
-  tags = {}
+  tags           = var.tags
+  //tags = {}
 }
