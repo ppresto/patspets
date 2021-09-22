@@ -21,6 +21,6 @@ module "ec2_instance" {
   name_prefix    = var.prefix
   tags           = var.tags
   instance_count = 3
-  instance_type  = "t2.nano"
+  instance_type  = "t2.large"
   security_group = data.terraform_remote_state.vpc.outputs.security_group_web
 }
