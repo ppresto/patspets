@@ -31,3 +31,10 @@ variable "cidr_egress" {
 }
 
 variable "organization" {}
+
+variable "tags" {
+  default = {
+    TTL = 8
+    owner = "presto"
+  }
+}
