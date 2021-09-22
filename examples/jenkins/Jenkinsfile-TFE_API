@@ -1,0 +1,167 @@
+import groovy.json.JsonOutput
+// Global Variables
+env.notification_channel = 'ppresto-alerts'
+
+//Slack - Send Slack Notifications at important stages of your pipeline
+def notifySlack(text, channel, attachments) {
+    def payload = JsonOutput.toJson([text: text,
+        channel: channel,
+        username: "Jenkins",
+        attachments: attachments
+    ])
+    withCredentials([usernamePassword(credentialsId: 'slack_webhook', passwordVariable: 'slack_url', usernameVariable: 'slack_channel')]) {
+      sh "curl -X POST --data-urlencode \'payload=${payload}\' ${slack_url}"
+    }
+}
+
+
+//Github - Dynamically Set Build Status per phase in your Github PR Page
+void setBuildStatus(String message, String state) {
+  step([
+      $class: "GitHubCommitStatusSetter",
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: env.GIT_URL],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
+      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
+  ]);
+}
+
+// Github - Merge and close your PR
+def mergeThenPush(repo, toBranch) {
+  withCredentials([usernamePassword(credentialsId: 'github-ppresto', passwordVariable: 'gitPass', usernameVariable: 'gitUser')]) {
+      sh "git config --global user.email \"ppresto@hashicorp.com\""
+      sh "git config --global user.name \"Patrick Presto\""
+      sh "git checkout ${toBranch}"
+      sh "git pull https://${gitUser}:${gitPass}@${repo} ${toBranch}"
+      sh "git merge origin/${env.BRANCH_NAME} --no-ff"
+      sh "git push https://${gitUser}:${gitPass}@${repo} ${toBranch}"
+  }
+}
+
+pipeline {
+      agent any
+      environment {
+            GIT_REPO = "https://github.com/ppresto/patspets"
+            TFE_NAME = "app.terraform.io"
+            TFE_URL = "https://app.terraform.io"
+            TFE_ORGANIZATION = "Patrick"
+            TFE_WORKSPACE = "patspets_stage"
+            TFE_API_URL = "${TFE_URL}/api/v2"
+            TFE_API_TOKEN = credentials("tfe_api_token")
+            TFE_DIRECTORY = "tfe"
+            UPLOAD_FILE_NAME = "./content.${TFE_WORKSPACE}.tar.gz"
+            
+      }
+
+      stages {
+            stage('Create TFE Content') {
+                  steps {
+                        // List env vars for ref
+                        echo sh(returnStdout: true, script: 'env')
+                        sh '''
+                              tar -C "$TFE_DIRECTORY" -zcvf "$UPLOAD_FILE_NAME" .
+                        '''
+                  }
+            }
+            stage('List TFE Workspaces') {
+                  steps {
+                  sh '''
+                        curl \
+                        --silent --show-error --fail \
+                        --header "Authorization: Bearer $TFE_API_TOKEN" \
+                        --header "Content-Type: application/vnd.api+json" \
+                        ${TFE_API_URL}/organizations/${TFE_ORGANIZATION}/workspaces \
+                        | jq -r \'.data[] | .attributes.name\'
+                  '''
+                  }
+            }
+            stage('Get Workspace ID') {
+                  steps {
+                        script {
+                              env.WORKSPACE_ID = sh(returnStdout: true, script: 'curl \
+                              --header "Authorization: Bearer $TFE_API_TOKEN" \
+                              --header "Content-Type: application/vnd.api+json" \
+                              ${TFE_API_URL}/organizations/$TFE_ORGANIZATION/workspaces/$TFE_WORKSPACE \
+                              | jq -r ".data.id"').trim()
+                        }
+                  }
+            }
+            stage('Create New Config Version') {
+                  steps {
+                        setBuildStatus("Creating New Config Version", "PENDING");
+                        echo "WORKSPACE_ID: ${WORKSPACE_ID}"                           
+                        sh '''
+                              echo '{"data":{"type":"configuration-version"}}' > ./create_config_version.json
+                        '''
+                        script {
+                              env.UPLOAD_URL = sh(returnStdout: true, script: 'curl \
+                              --header "Authorization: Bearer $TFE_API_TOKEN" \
+                              --header "Content-Type: application/vnd.api+json" \
+                              --request POST \
+                              --data @create_config_version.json \
+                              ${TFE_API_URL}/workspaces/$WORKSPACE_ID/configuration-versions \
+                              | jq -r \'.data.attributes."upload-url"\'').trim()
+                        }
+                  }
+            }
+            stage('Upload Workspace Content') {
+                  steps {
+                        setBuildStatus("Uploading Content to ${UPLOAD_URL}", "PENDING");
+                        echo "URL: ${UPLOAD_URL}"
+                        sh '''
+                              curl \
+                              --header "Content-Type: application/octet-stream" \
+                              --request PUT \
+                              --data-binary @"$UPLOAD_FILE_NAME" \
+                              ${UPLOAD_URL}
+                        '''
+                        notifySlack("${TFE_WORKSPACE}: New Content Uploaded\nJenkins Job: http://localhost:8080/job/$JOB_NAME/$BUILD_NUMBER/console \nTerraform Runs:${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+                  }
+            }
+            
+            stage('Post Validation') {
+                  parallel { 
+                        stage('Integration Tests') {
+                              steps {
+                                    echo "Running test cases"
+                              }
+                        }
+                        stage('Security Tests') {
+                              steps {
+                                    echo "Running test cases"
+                              }
+                        }
+                        stage('Functional Tests') {
+                              steps {
+                                    echo "Running test cases"
+                              }      
+                        }
+                  }
+            }
+            stage('Merge') {
+                  steps {
+                        echo "Merging ${env.BRANCH_NAME} to stage"
+                        mergeThenPush("github.com/ppresto/patspets", "stage")
+                        notifySlack("${TFE_WORKSPACE} - PR Merged - ${TFE_URL}/app/${TFE_ORGANIZATION}/workspaces/${TFE_WORKSPACE}/runs/", notification_channel, [])
+
+                  }
+            }
+            stage('Clean Up') {
+                  steps {
+                        sh '''                                   
+                              rm -rf ${WORKSPACE}/.git*
+                        '''
+                  }
+            }
+      }
+
+      post {
+    success {
+        setBuildStatus("Build Succeeded", "SUCCESS");
+    }
+    failure {
+        setBuildStatus("Build Failed", "FAILURE");
+    }
+  }
+
+}

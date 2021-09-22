@@ -1,29 +1,31 @@
 //--------------------------------------------------------------------
 // Workspace Data
-data "terraform_remote_state" "patrick_tf_aws_standard_network" {
+data "terraform_remote_state" "presto_projects_aws_std_network" {
   backend = "atlas"
-  config  = {
+  config = {
     address = "https://app.terraform.io"
-    name    = "${var.organization}/tf-aws-standard-network"
+    name    = "presto-projects/aws-std-network"
   }
 }
 
 //--------------------------------------------------------------------
 // Modules
 module "ec2_instance" {
-  source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  //version = "2.0.7" //Use to verify policy: use-latest-module-version
+  source  = "app.terraform.io/presto-projects/ec2-instance/aws"
+  // version - Use 2.0.6/2.0.7 to test policy: use-latest-module-version
   version = "2.0.8"
+  tfe_org = "presto-projects"
+  tfe_workspace = "aws-std-network"
   name_prefix = "${var.name_prefix}"
-  instance_count = 3
+  instance_count = 5
   instance_type = "t2.nano"
-  security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
+  security_group = "${data.terraform_remote_state.presto_projects_aws_std_network.outputs.security_group_web}"
   tags = {
-    TTL = 7
-    owner = "presto"
+    Environment = "dev"
+    owner       = "uswest-se-ppresto"
+    TTL         = 24
   }
 }
-
 
 
 //--------------------------------------------------------------------

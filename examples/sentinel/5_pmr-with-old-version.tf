@@ -4,7 +4,7 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
   backend = "atlas"
   config  = {
     address = "https://app.terraform.io"
-    name    = "${var.organization}/tf-aws-standard-network"
+    name    = "Patrick/tf-aws-standard-network"
   }
 }
 
@@ -12,18 +12,18 @@ data "terraform_remote_state" "patrick_tf_aws_standard_network" {
 // Modules
 module "ec2_instance" {
   source  = "app.terraform.io/Patrick/ec2_instance/aws"
-  //version = "2.0.7" //Use to verify policy: use-latest-module-version
-  version = "2.0.8"
+  // version - Use 2.0.6/2.0.7 to test policy: use-latest-module-version
+  version = "2.0.7"
   name_prefix = "${var.name_prefix}"
-  instance_count = 3
-  instance_type = "t2.nano"
+  instance_count = 5
+  instance_type = "t2.large"
   security_group = "${data.terraform_remote_state.patrick_tf_aws_standard_network.outputs.security_group_web}"
   tags = {
-    TTL = 7
-    owner = "presto"
+    Environment = "dev"
+    owner       = "uswest-se-ppresto"
+    TTL         = 24
   }
 }
-
 
 
 //--------------------------------------------------------------------
