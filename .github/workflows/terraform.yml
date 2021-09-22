@@ -15,7 +15,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        working-directory: tfe
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
