@@ -3,7 +3,7 @@ variable "aws_region" {
   default     = "us-west-2"
 }
 
-variable "name_prefix" {
+variable "prefix" {
   description = "Enter your name or unique description here."
 }
 
