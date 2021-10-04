@@ -3,6 +3,9 @@
 This is a Simple python flask app that also contains TF infrastructure as code meant to validated through a CI/CD Pipeline and then merged to master.
 
 ## TFCB Demo
+* Use vCode to show VCS driven workflow
+* [PR/MR workflow](https://github.com/ppresto/patspets/pull/55)
+* [Github Actions workflow](https://github.com/ppresto/patspets/pull/50)
 ## Requirements
 Refer to [githun.com/ppresto/myJenkins](https://github.com/ppresto/myJenkins) for the docker image setup and organization discovery job.
 
