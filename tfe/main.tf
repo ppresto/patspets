@@ -25,4 +25,5 @@ module "ec2_instance" {
   security_group = data.terraform_remote_state.vpc.outputs.security_group_web
   tags           = var.tags
   //tags = {}
+  
 }
