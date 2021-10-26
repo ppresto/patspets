@@ -20,8 +20,8 @@ module "ec2_instance" {
   //version        = "2.0.10"
   subnet_id      = data.terraform_remote_state.vpc.outputs.public_subnets[0]
   name_prefix    = var.prefix
-  instance_count = 4
-  instance_type  = "t2.large"
+  instance_count = 3
+  instance_type  = "t2.micro"
   security_group = data.terraform_remote_state.vpc.outputs.security_group_web
   tags           = var.tags
   //tags = {}
